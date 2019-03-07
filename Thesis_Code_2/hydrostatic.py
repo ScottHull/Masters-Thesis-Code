@@ -38,6 +38,8 @@ for index, inc in enumerate(magmaOceanDepthRange):
     adiabatList.append(depthT)
     pressureList.append(pressure)
 
+print(pressureList)
+
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(magmaOceanDepthRangeKM, pressureList)
