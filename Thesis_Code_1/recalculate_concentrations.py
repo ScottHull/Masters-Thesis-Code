@@ -5,10 +5,18 @@ import pandas as pd
 from math import log, exp, pi, sqrt
 import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+from decimal import Decimal
 
 
 
 # velocity: 0.2580697580112788
+# total num droplets: 2.2788731170907947e+20
+
+def calcNumTotalDroplets(core_radius, droplet_radius):
+    core_volume = (4/3) * pi * (core_radius**3)
+    droplet_volume = (4/3) * pi * (droplet_radius**3)
+    num_droplets = core_volume / droplet_volume
+    return num_droplets
 
 def iterReverseD(obj_concs, cell_concs, index=0, iterReverseDList=[]):
 
@@ -16,6 +24,7 @@ def iterReverseD(obj_concs, cell_concs, index=0, iterReverseDList=[]):
         obj = list(obj_concs)[index]
         cell_concs_range = list(cell_concs)[0:index + 1]
         avg_cell_concs_range = sum(cell_concs_range) / (len(cell_concs_range))
+        # print(cell_concs[index], avg_cell_concs_range)
         avg_D = obj / avg_cell_concs_range
         iterReverseDList.append(avg_D)
         return iterReverseD(obj_concs=obj_concs, cell_concs=cell_concs, index=(index + 1), iterReverseDList=iterReverseDList)
@@ -111,6 +120,7 @@ cell_moles_fO2_245 = list(df_fO2_245['cell_moles'])
 object_moles_fO2_245 = list(df_fO2_245['object_moles'])
 reverse_D_fO2_245 = iterReverseD(obj_concs=obj_conc_fO2_245, cell_concs=cell_conc_fO2_245, index=0, iterReverseDList=[])
 
+num_dropelts_vesta = calcNumTotalDroplets(core_radius=113 * 1000, droplet_radius=0.0185)
 
 
 
@@ -138,6 +148,9 @@ new_reverse_D_fO2_110 = iterReverseD(obj_concs=concs_objs_fO2_110, cell_concs=co
 new_reverse_D_fO2_225 = iterReverseD(obj_concs=concs_objs_fO2_225, cell_concs=concs_mesh_fO2_225, index=0, iterReverseDList=[])
 new_reverse_D_fO2_245 = iterReverseD(obj_concs=concs_objs_fO2_245, cell_concs=concs_mesh_fO2_245, index=0, iterReverseDList=[])
 
+new_df = pd.DataFrame({'depth': depth_fO2_08, 'old_obj_conc': obj_conc_fO2_08, 'new_obj_conc': concs_objs_fO2_08, 'old_mesh_conc': cell_conc_fO2_08, 'new_mesh_conc': concs_mesh_fO2_08})
+new_df.to_csv("08_check.csv")
+
 
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(211)
@@ -146,14 +159,14 @@ ax1.plot(depth_fO2_08, new_reverse_D_fO2_08, label='Reversed fO2 = IW-0.8', colo
 ax1.plot(depth_fO2_110, D_fO2_110, label='fO2 = IW-1.10', color='blue')
 ax1.plot(depth_fO2_110, new_reverse_D_fO2_110, label='Reversed fO2 = IW-1.10', color='blue', linestyle="--")
 ax1_2 = fig1.add_subplot(212)
-ax1_2.plot(depth_fO2_08, [i - j for i, j in zip(D_fO2_08, new_reverse_D_fO2_08)],
+ax1_2.plot(depth_fO2_08, [j - i for i, j in zip(D_fO2_08, new_reverse_D_fO2_08)],
            label="Reversed - Distributed (fO2 = IW-0.8)", linestyle="--", color='red')
-ax1_2.plot(depth_fO2_110, [i - j for i, j in zip(D_fO2_110, new_reverse_D_fO2_110)],
+ax1_2.plot(depth_fO2_110, [j - i for i, j in zip(D_fO2_110, new_reverse_D_fO2_110)],
            label="Reversed - Distributed (fO2 = IW-1.10)", linestyle="--", color='blue')
 ax1.grid()
 ax1.fill_between(depth_fO2_08, D_fO2_08, D_fO2_110, color='red', alpha=0.2)
-ax1_2.fill_between(depth_fO2_225, [i - j for i, j in zip(D_fO2_08, new_reverse_D_fO2_08)],
-                   [i - j for i, j in zip(D_fO2_110, new_reverse_D_fO2_110)], color='red', alpha=0.2)
+ax1_2.fill_between(depth_fO2_225, [j - i for i, j in zip(D_fO2_08, new_reverse_D_fO2_08)],
+                   [j - i for i, j in zip(D_fO2_110, new_reverse_D_fO2_110)], color='red', alpha=0.2)
 ax1.set_title("Iron Meteorite fO2 Model")
 ax1.legend(loc='center right')
 ax1_2.legend(loc='upper left')
@@ -170,14 +183,14 @@ ax2.plot(depth_fO2_225, new_reverse_D_fO2_225, label='Reversed fO2 = IW-2.25', c
 ax2.plot(depth_fO2_245, D_fO2_245, label='fO2 = IW-2.45', color='blue')
 ax2.plot(depth_fO2_245, new_reverse_D_fO2_245, label='Reversed fO2 = IW-2.45', color='blue', linestyle="--")
 ax2_2 = fig2.add_subplot(212)
-ax2_2.plot(depth_fO2_225, [i - j for i, j in zip(D_fO2_225, new_reverse_D_fO2_225)],
+ax2_2.plot(depth_fO2_225, [j - i for i, j in zip(D_fO2_225, new_reverse_D_fO2_225)],
            label="Reversed - Distributed (fO2 = IW-2.25)", linestyle="--", color='red')
-ax2_2.plot(depth_fO2_245, [i - j for i, j in zip(D_fO2_245, new_reverse_D_fO2_245)],
+ax2_2.plot(depth_fO2_245, [j - i for i, j in zip(D_fO2_245, new_reverse_D_fO2_245)],
            label="Reversed - Distributed (fO2 = IW-2.45)", linestyle="--", color='blue')
 ax2.grid()
 ax2.fill_between(depth_fO2_225, D_fO2_225, D_fO2_245, color='red', alpha=0.2)
-ax2_2.fill_between(depth_fO2_225, [i - j for i, j in zip(D_fO2_225, new_reverse_D_fO2_225)],
-                   [i - j for i, j in zip(D_fO2_245, new_reverse_D_fO2_245)], color='red', alpha=0.2)
+ax2_2.fill_between(depth_fO2_225, [j - i for i, j in zip(D_fO2_225, new_reverse_D_fO2_225)],
+                   [j - i for i, j in zip(D_fO2_245, new_reverse_D_fO2_245)], color='red', alpha=0.2)
 ax2.legend(loc='center right')
 ax2_2.legend(loc='upper left')
 ax2.set_title("Vesta fO2 Model")
@@ -206,24 +219,46 @@ ax3.legend(loc='upper left')
 ax3_2.legend(loc='upper left')
 
 fig4 = plt.figure()
-ax4 = fig4.add_subplot(211)
-ax4.plot(depth_fO2_08, moles_objs_fO2_08, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-0.8)")
-ax4.plot(depth_fO2_110, moles_objs_fO2_110, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-1.10)")
-ax4_2 = fig4.add_subplot(212)
-ax4_2.plot(depth_fO2_225, moles_objs_fO2_225, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-2.25)")
-ax4_2.plot(depth_fO2_245, moles_objs_fO2_245, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-2.45)")
-ax4.grid()
-ax4_2.grid()
-ax4_2.set_xlabel("Depth (km)")
-ax4.set_ylabel("Moles in Metal Droplet")
-ax4_2.set_ylabel("Moles in Metal Droplet")
-ax4.set_title("Mole Evolution in Metal Droplet Along Droplet Path of Descent")
-ax4.fill_between(depth_fO2_08, moles_objs_fO2_08, moles_objs_fO2_110, color='red', alpha=0.2, label="Reducing Model")
-ax4_2.fill_between(depth_fO2_225, moles_objs_fO2_225, moles_objs_fO2_245, color='blue', alpha=0.2, label="Reducing Model")
-ax4.legend(loc='upper left')
-ax4_2.legend(loc='upper left')
+ax5 = fig4.add_subplot(211)
+ax5.plot(depth_fO2_08, moles_objs_fO2_08, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-0.8)")
+ax5.plot(depth_fO2_110, moles_objs_fO2_110, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-1.10)")
+ax5_2 = fig4.add_subplot(212)
+ax5_2.plot(depth_fO2_225, moles_objs_fO2_225, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-2.25)")
+ax5_2.plot(depth_fO2_245, moles_objs_fO2_245, linewidth=2.0, label="Moles in Metal Droplets (fO2: IW-2.45)")
+ax5.grid()
+ax5_2.grid()
+ax5_2.set_xlabel("Depth (km)")
+ax5.set_ylabel("Moles in Metal Droplet")
+ax5_2.set_ylabel("Moles in Metal Droplet")
+ax5.set_title("Mole Evolution in Metal Droplet Along Droplet Path of Descent")
+ax5.fill_between(depth_fO2_08, moles_objs_fO2_08, moles_objs_fO2_110, color='red', alpha=0.2, label="Reducing Model")
+ax5_2.fill_between(depth_fO2_225, moles_objs_fO2_225, moles_objs_fO2_245, color='blue', alpha=0.2, label="Reducing Model")
+ax5.legend(loc='upper left')
+ax5_2.legend(loc='upper left')
 
 
+fig5 = plt.figure()
+ax5 = fig5.add_subplot(211)
+ax5_2 = fig5.add_subplot(212)
+ax5.plot(depth_fO2_08, [((j - i) / i) * 100 for i, j in zip(D_fO2_08, new_reverse_D_fO2_08)])
+ax5.plot(depth_fO2_110, [((j - i) / i) * 100 for i, j in zip(D_fO2_110, new_reverse_D_fO2_110)])
+ax5_2.plot(depth_fO2_225, [((j - i) / i) * 100 for i, j in zip(D_fO2_225, new_reverse_D_fO2_225)])
+ax5_2.plot(depth_fO2_245, [((j - i) / i) * 100 for i, j in zip(D_fO2_245, new_reverse_D_fO2_245)])
+ax5.grid()
+ax5_2.grid()
+ax5_2.set_xlabel("Depth (km)")
+ax5.set_ylabel("Relative Change (%)")
+ax5_2.set_ylabel("Relative Change (%)")
+ax5.set_title("Relative Change in Averaged vs. Absolute D Over Depth (relative to absolute)")
+ax5.fill_between(depth_fO2_08, [((j - i) / i) * 100 for i, j in zip(D_fO2_08, new_reverse_D_fO2_08)],
+                 [((j - i) / i) * 100 for i, j in zip(D_fO2_110, new_reverse_D_fO2_110)], color='red', alpha=0.2, label="Reducing Model")
+ax5_2.fill_between(depth_fO2_225, [((j - i) / i) * 100 for i, j in zip(D_fO2_225, new_reverse_D_fO2_225)],
+                   [((j - i) / i) * 100 for i, j in zip(D_fO2_245, new_reverse_D_fO2_245)], color='blue', alpha=0.2, label="Reducing Model")
+ax5.legend(loc='lower left')
+ax5_2.legend(loc='lower left')
 
+a = [moles_objs_fO2_08[-1] * num_dropelts_vesta, moles_objs_fO2_110[-1] * num_dropelts_vesta, moles_objs_fO2_225[-1] * num_dropelts_vesta, moles_objs_fO2_245[-1] * num_dropelts_vesta]
+for i in a:
+    print('%.4E' % Decimal(str(i)))
 
 plt.show()

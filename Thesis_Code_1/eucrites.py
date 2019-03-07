@@ -189,5 +189,6 @@ ax4_2.set_ylabel("Mole Flux into Metal")
 ax4.legend(loc='center right')
 ax4_2.legend(loc='center right')
 
+print(num_dropelts_vesta)
 
 plt.show()
