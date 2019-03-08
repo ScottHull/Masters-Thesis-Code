@@ -116,18 +116,18 @@ def getMeshSizeTimestep(z_eq, t_eq, magma_ocean_depth):
     return total_mesh_cells, time_to_bottom
 
 
-def linearizeAdiabat(z_eq, magma_ocean_depth, adiabat):
+def linearizeAdiabat(total_mesh_cells, magma_ocean_depth, adiabat):
     min_temp = adiabat[0]
     max_temp = adiabat[-1]
     diff = max_temp - min_temp
-    step = diff / z_eq
+    step = diff / total_mesh_cells
     return step
 
-def linearizeHydrostatic(z_eq, magma_ocean_depth, hydrostatic):
+def linearizeHydrostatic(total_mesh_cells, magma_ocean_depth, hydrostatic):
     min_pressure = hydrostatic[0]
     max_pressure = hydrostatic[-1]
     diff = max_pressure - min_pressure
-    step = diff / z_eq
+    step = diff / total_mesh_cells
     return step
 
 
@@ -453,8 +453,8 @@ t_eq_10_minus2 = z_eq_10_minus2 / earth_velocity_turbulent
 rounded_z_eq = 40
 rounded_t_eq = rounded_z_eq / earth_velocity_turbulent
 total_mesh_cells, total_time = getMeshSizeTimestep(z_eq=40, t_eq=rounded_t_eq, magma_ocean_depth=radius_earth)
-adiabat_step = linearizeAdiabat(z_eq=rounded_z_eq, magma_ocean_depth=radius_earth, adiabat=adiabatic_earth)
-hydrostatic_step = linearizeHydrostatic(z_eq=rounded_z_eq, magma_ocean_depth=radius_earth, hydrostatic=hydrostat_earth)
+adiabat_step = linearizeAdiabat(total_mesh_cells=total_mesh_cells, magma_ocean_depth=radius_earth, adiabat=adiabatic_earth)
+hydrostatic_step = linearizeHydrostatic(total_mesh_cells=total_mesh_cells, magma_ocean_depth=radius_earth, hydrostatic=hydrostat_earth)
 moles_in_droplets = calcInitialMolesInDropletEarth(moles_core_of_vesta=1.0704 * 10**17,
                                                    droplet_radius=earth_droplet_radius, vesta_core_radius=113 * 1000)
 
@@ -462,6 +462,8 @@ print(earth_droplet_radius, earth_velocity_turbulent, z_eq_10_minus2, t_eq_10_mi
 print(rounded_z_eq, rounded_t_eq)
 print(total_mesh_cells, total_time, adiabat_step, hydrostatic_step)
 print(moles_in_droplets)
+
+print(hydrostat_earth[-1])
 
 diffusion_length = calcDiffusionLength(chem_diffusivity=diffusivity, droplet_radius=earth_droplet_radius,
                                        settling_velocity=earth_velocity_turbulent)
@@ -488,10 +490,14 @@ for index, i in enumerate(list(depths_fO2_225)):
 
 fig6 = plt.figure()
 ax6 = fig6.add_subplot(111)
-ax6.plot(adiabatic_earth, cottrell, linestyle="--")
-ax6.plot(depths_fO2_225, reverse_recalc_concs_fO2_225)
+ax6.plot([i / 1000 for i in list(depths_fO2_225)[:-1]], cottrell[:-1], linestyle="--")
+ax6.plot([i / 1000 for i in list(depths_fO2_225)[:-1]], reverse_recalc_concs_fO2_225)
 
 
 plt.show()
 
+
+
+
+# need to fix the linearized hydrostatic and adiabatic gradients
 
