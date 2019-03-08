@@ -123,7 +123,15 @@ thermal_expansion = 6 * 10**(-5)
 heat_capacity = 10**3
 thermal_diffusivity = 10**(-6)
 surface_gravity = 9.8
-etas = [10 ** (-5.0), 10 ** (-4.5), 10 ** (-4.0), 10 ** (-3.5), 10 ** (-3.0), 10 ** (-2.5), 10 ** (-2.0), 10 ** (-1.5), 10 ** (-1.0), 10 ** (-0.5), 10 ** (0)]
+etas = [10 ** (-4.0), 10 ** (-3.5), 10 ** (-3.0), 10 ** (-2.5), 10 ** (-2.0), 10 ** (-1.5), 10 ** (-1.0), 10 ** (-0.5), 10 ** (0)]
+droplet_radius_samples = [0.005, 0.01, 0.015, 0.02]
+
+sample_f_vals = []
+for j in droplet_radius_samples:
+    temp_sample_list = []
+    for i in etas:
+        temp_sample_list.append(frictionCoeff(density_melt=densityMelt, density_droplet=densityDroplet, dynamic_viscosity=i, gravity=surface_gravity, droplet_radius=j))
+    sample_f_vals.append(temp_sample_list)
 
 # calculate stable droplet radii
 radius_laminar_list = []
@@ -176,31 +184,56 @@ ax1 = fig1.add_subplot(111)
 ax1.plot(etas, [i * 100 for i in radius_laminar_list], linewidth=2.0, label="Stable Radius (Laminar) (cm)")
 ax1.plot(etas, [i * 100 for i in radius_turbulent_list], linewidth=2.0, label="Stable Radius (Turbulent) (cm)")
 ax1.axvspan(10 ** (-3.5), 10 ** (-1), color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
-ax1.set_title("Maximum Stable Droplet Radius vs. Dynamic Viscosity")
+ax1.set_title("Maximum Stable Droplet Radius vs. Dynamic Viscosity (Earth)")
 ax1.set_xlabel("Dynamic Viscosity (Pa s)")
 ax1.set_ylabel("Max. Stable Droplet Radius (cm)")
 ax1.grid()
 ax1.legend(loc='upper left')
+ax1.set_xscale('log')
 
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(211)
-ax2_twin = ax2.twiny()
 ax2_2 = fig2.add_subplot(212)
-ax2_2_twin = ax2_2.twiny()
 ax2.plot(etas, velocity_laminar_list, linewidth=2.0, label="Settling Velocity (Laminar)")
 ax2_2.plot(etas, velocity_turbulent_list, linewidth=2.0, label="Setting Velocity (Turbulent)")
-ax2.set_title("Stable Settling Velocity vs. Dynamic Viscosity")
+ax2.set_title("Stable Settling Velocity vs. Dynamic Viscosity (Earth)")
 ax2_2.set_xlabel("Dynamic Viscosity (Pa s)")
 ax2.set_ylabel("Settling Velocity (m/s)")
 ax2_2.set_ylabel("Settling Velocity (m/s)")
-ax2_twin.set_xticks(radius_laminar_list)
-ax2_2.set_xlim(ax2.get_xlim())
-ax2_2_twin.set_xticks(radius_turbulent_list)
 ax1.axvspan(10 ** (-3.5), 10 ** (-1), color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
 ax2.grid()
 ax2_2.grid()
 ax2.legend(loc='upper left')
 ax2_2.legend(loc='upper left')
+ax2.set_xscale('log')
+ax2_2.set_xscale('log')
+
+# recall that viscosity is independent of stable radius and settling velocity in the turbulent regime.
+# therefore, does not need to be plotted here.
+fig3 = plt.figure()
+ax3 = fig3.add_subplot(111)
+ax3.plot([i * 100 for i in radius_laminar_list], velocity_laminar_list, linewidth=2.0, label="Settling Velocity (Laminar)")
+ax3.set_title("Stable Settling Velocity vs. Stable Droplet Radius (Earth)")
+ax3.set_xlabel("Stable Droplet Radius (cm)")
+ax3.set_ylabel("Settling Velocity (m/s)")
+ax3.axvspan(radius_laminar_list[etas.index(10 ** (-3.5))] * 100, radius_laminar_list[etas.index(10 ** (-1.0))] * 100,
+            color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
+ax3.grid()
+ax3.legend(loc='upper left')
+
+fig4 = plt.figure()
+ax4 = fig4.add_subplot(111)
+for index, i in enumerate(sample_f_vals):
+    ax4.plot(etas, i, linewidth=2.0, label="Droplet Radius: {} cm".format(droplet_radius_samples[index] * 100))
+ax4.axvspan(10 ** (-3.5), 10 ** (-1), color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
+ax4.set_title("Friction Coefficient (f) vs. Dynamic Viscosity for Possible Droplet Radius (Earth)")
+ax4.set_xlabel("Dynamic Viscosity (Pa s)")
+ax4.set_ylabel("Friction Coefficient (f)")
+ax4.legend(loc='upper right')
+ax4.grid()
+ax4.set_xscale('log')
+
+print(radius_turbulent_list)
 
 
 plt.show()
