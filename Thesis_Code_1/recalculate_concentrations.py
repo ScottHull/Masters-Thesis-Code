@@ -257,8 +257,8 @@ ax5_2.fill_between(depth_fO2_225, [((j - i) / i) * 100 for i, j in zip(D_fO2_225
 ax5.legend(loc='lower left')
 ax5_2.legend(loc='lower left')
 
-a = [moles_objs_fO2_08[-1] * num_dropelts_vesta, moles_objs_fO2_110[-1] * num_dropelts_vesta, moles_objs_fO2_225[-1] * num_dropelts_vesta, moles_objs_fO2_245[-1] * num_dropelts_vesta]
-for i in a:
-    print('%.4E' % Decimal(str(i)))
+# a = [moles_objs_fO2_08[-1] * num_dropelts_vesta, moles_objs_fO2_110[-1] * num_dropelts_vesta, moles_objs_fO2_225[-1] * num_dropelts_vesta, moles_objs_fO2_245[-1] * num_dropelts_vesta]
+# for i in a:
+#     print('%.4E' % Decimal(str(i)))
 
 plt.show()
