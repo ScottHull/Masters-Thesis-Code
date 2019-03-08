@@ -1,4 +1,5 @@
 from math import pi, log, sqrt
+import pandas as pd
 import numpy as np
 import matplotlib as mpl; mpl.use("Qt5Agg")
 import matplotlib.pyplot as plt
@@ -109,10 +110,108 @@ def z_eq(radius_droplet, dynamic_viscosity, settling_velocity, diffusion_coeff, 
     z = 4.624 * (num/den)
     return z
 
+def getMeshSizeTimestep(z_eq, t_eq, magma_ocean_depth):
+    total_mesh_cells = magma_ocean_depth / z_eq
+    time_to_bottom = t_eq * total_mesh_cells
+    return total_mesh_cells, time_to_bottom
+
+
+def linearizeAdiabat(z_eq, magma_ocean_depth, adiabat):
+    min_temp = adiabat[0]
+    max_temp = adiabat[-1]
+    diff = max_temp - min_temp
+    step = diff / z_eq
+    return step
+
+def linearizeHydrostatic(z_eq, magma_ocean_depth, hydrostatic):
+    min_pressure = hydrostatic[0]
+    max_pressure = hydrostatic[-1]
+    diff = max_pressure - min_pressure
+    step = diff / z_eq
+    return step
+
+
+def calcInitialMolesInDropletEarth(moles_core_of_vesta, droplet_radius, vesta_core_radius):
+    droplet_volume = (4/3) * pi * (droplet_radius**3)
+    vesta_core_volume = (4/3) * pi * (vesta_core_radius**3)
+    droplets_dispered = vesta_core_volume / droplet_volume
+    moles_in_droplet = moles_core_of_vesta / droplets_dispered
+    return moles_in_droplet
+
+
+def iterReverseD(obj_concs, cell_concs, index=0, iterReverseDList=[]):
+
+    if index < len(list(obj_concs)):
+        obj = list(obj_concs)[index]
+        cell_concs_range = list(cell_concs)[0:index + 1]
+        avg_cell_concs_range = sum(cell_concs_range) / (len(cell_concs_range))
+        # print(cell_concs[index], avg_cell_concs_range)
+        avg_D = obj / avg_cell_concs_range
+        iterReverseDList.append(avg_D)
+        return iterReverseD(obj_concs=obj_concs, cell_concs=cell_concs, index=(index + 1), iterReverseDList=iterReverseDList)
+    else:
+        return iterReverseDList
+
+def forIterReverseD(obj_concs, cell_concs):
+    iterReverseDList = []
+    for index in range(len(list(obj_concs))):
+        if index + 1 < len(list(obj_concs)):
+            obj = list(obj_concs)[index]
+            cell_concs_range = list(cell_concs)[0:index + 1]
+            avg_cell_concs_range = sum(cell_concs_range) / (len(cell_concs_range))
+            # print(cell_concs[index], avg_cell_concs_range)
+            avg_D = obj / avg_cell_concs_range
+            iterReverseDList.append(avg_D)
+        else:
+            return iterReverseDList
+
+def calcDiffusionLength(chem_diffusivity, droplet_radius, settling_velocity):
+    l = sqrt((2 * chem_diffusivity * droplet_radius) / settling_velocity)
+    return l
+
+def meltLengthWidth(diff_length, droplet_radius):
+    length_width = (2 * droplet_radius) + (2 * diff_length)
+    return length_width
+
+def recalcConcentration(predicted_d, original_moles_silicate, original_moles_metal, volume_mesh, radius_object):
+    volume_obj = (4 / 3) * pi * (radius_object ** 3)
+
+    original_conc_silicate = original_moles_silicate / volume_mesh
+    original_conc_metal = original_moles_metal / volume_obj
+    concs_mesh = [original_conc_silicate]
+    concs_objs = [original_conc_metal]
+    moles_mesh = [original_moles_silicate]
+    moles_objs = [original_moles_metal]
+    verify_D = []
+    for index, d in enumerate(list(predicted_d)):
+        old_moles_obj = moles_objs[index - 1]
+        old_moles_cell = moles_mesh[index - 1]
+
+        adj_matrix = (old_moles_cell /
+                      (1 + (3 * volume_mesh * (
+                                  (4 * pi * (radius_object ** 3) * d) ** (-1)))))
+        adj_object = (old_moles_obj /
+                      (1 + (4 * pi * (radius_object ** 3) * d) * (
+                                  (3 ** (-1)) * (volume_mesh**(-1)))))
+        adj_moles = adj_matrix - adj_object
+
+        # adjust the moles of the element in the object and matrix, respectively
+        new_moles_obj = old_moles_obj + adj_moles
+        new_moles_cell = old_moles_cell - adj_moles
+        new_obj_conc = new_moles_obj / volume_obj
+        new_mesh_conc = new_moles_cell / volume_mesh
+        check_D = new_obj_conc / new_mesh_conc
+        moles_objs.append(new_moles_obj)
+        moles_mesh.append(new_moles_cell)
+        concs_mesh.append(new_mesh_conc)
+        concs_objs.append(new_obj_conc)
+        verify_D.append(check_D)
+
+    return concs_mesh[1:], concs_objs[1:], moles_mesh[1:], moles_objs[1:], verify_D[1:]
 
 
 
-radius_earth = 1000 * 1000  # 265 km
+radius_earth = 520 * 1000  # 1000 km
 current_vesta_core_radius_min = 107 * 1000
 current_vesta_core_radius_max = 113 * 1000
 depth_increment = 5 * 1000   # 5 km
@@ -124,7 +223,56 @@ heat_capacity = 10**3
 thermal_diffusivity = 10**(-6)
 surface_gravity = 9.8
 etas = [10 ** (-4.0), 10 ** (-3.5), 10 ** (-3.0), 10 ** (-2.5), 10 ** (-2.0), 10 ** (-1.5), 10 ** (-1.0), 10 ** (-0.5), 10 ** (0)]
-droplet_radius_samples = [0.005, 0.01, 0.015, 0.02]
+droplet_radius_samples = [0.001, 0.005, 0.01, 0.015, 0.02]
+
+
+
+adiabatic_depths_earth, adiabatic_earth = adiabat(
+    current_depth=0 / 1000,  # begin at surface
+    current_temperature=2000,  # degrees K
+    depth_increment=depth_increment,  # 10 km interval
+    depth=radius_earth,  # to depth of 250 km
+    gravity=surface_gravity,  # m/s^2, Earth
+    thermal_expansion=6 * 10**(-5),
+    heat_capacity=10**3,
+    depth_gradient=[0],  # returns this list at index=0
+    adiabat_gradient=[2000],  # returns this list at index=1
+)
+
+hydrostatic_depths_earth, hydrostat_earth = hydrostatic(
+    current_depth=0 / 1000,
+    depth_increment=depth_increment,
+    depth=radius_earth,
+    gravity=surface_gravity,
+    current_pressure=0,
+    density_melt=densityMelt,
+    depth_gradient=[0],
+    pressure_gradient=[0],
+)
+
+adiabatic_depths_vesta, adiabatic_vesta = adiabat(
+    current_depth=0 / 1000,  # begin at surface
+    current_temperature=2000,  # degrees K
+    depth_increment=depth_increment,  # 10 km interval
+    depth=265 * 1000,  # to depth of 250 km
+    gravity=0.25,  # m/s^2, Vesta
+    thermal_expansion=6 * 10**(-5),
+    heat_capacity=10**3,
+    depth_gradient=[0],  # returns this list at index=0
+    adiabat_gradient=[2000],  # returns this list at index=1
+)
+
+hydrostatic_depths_vesta, hydrostat_vesta = hydrostatic(
+    current_depth=0 / 1000,
+    depth_increment=depth_increment,
+    depth=265 * 1000,
+    gravity=0.25,
+    current_pressure=0,
+    density_melt=densityMelt,
+    depth_gradient=[0],
+    pressure_gradient=[0],
+)
+
 
 sample_f_vals = []
 for j in droplet_radius_samples:
@@ -233,7 +381,117 @@ ax4.legend(loc='upper right')
 ax4.grid()
 ax4.set_xscale('log')
 
-print(radius_turbulent_list)
+fig5 = plt.figure()
+ax5 = fig5.add_subplot(211)
+ax5_2 = fig5.add_subplot(212)
+ax5.plot(adiabatic_depths_earth, adiabatic_earth, linewidth=2.0, label="Earth Magma Ocean Adiabat")
+ax5.plot(adiabatic_depths_vesta, adiabatic_vesta, linewidth=2.0, label="Vesta Magma Ocean Adiabat")
+ax5_2.plot(hydrostatic_depths_earth, hydrostat_earth, linewidth=2.0, label="Earth Magma Ocean Hydrostatic Pressure Gradient")
+ax5_2.plot(hydrostatic_depths_vesta, hydrostat_vesta, linewidth=2.0, label="Vesta Magma Ocean Hydrostatic Pressure Gradient")
+ax5.grid()
+ax5_2.grid()
+ax5.set_title("Adiabatic and Hyrostatic Gradients Over Depth for Earth and Vesta Magma Oceans")
+ax5_2.set_xlabel("Depth (km)")
+ax5.set_ylabel("Adiabatic Temperature (degK)")
+ax5_2.set_ylabel("Hydrostatic Pressure Gradient (GPa)")
+ax5.legend(loc='upper right')
+ax5_2.legend(loc='upper right')
+
+
+def cottrellModel(pressure, temperature, fO2, nbo_t=2.6):
+    # eg. Cottrell et al. (2009) metal-silicate W partitioning model:
+    # log(D) = alpha + beta * (delta IW) + chi * (nbo/t) + delta * (1/T) + epsilon(P/T)
+
+
+    coeffs = {
+        'alpha': 0,
+        'beta': 0,
+        'chi': 0,
+        'delta': 0,
+        'epsilon': 0
+    }
+
+    if 0.0 <= pressure <= 2:
+        coeffs['alpha'] = 1.11
+        coeffs['beta'] = -1.18
+        coeffs['chi'] = -0.85
+        coeffs['delta'] = 1680
+        coeffs['epsilon'] = 487
+    else:
+        coeffs['alpha'] = 1.05
+        coeffs['beta'] = -1.10
+        coeffs['chi'] = -0.84
+        coeffs['delta'] = 3588
+        coeffs['epsilon'] = -102
+
+    alpha = coeffs['alpha']
+    beta = coeffs['beta']
+    chi = coeffs['chi']
+    delta = coeffs['delta']
+    epsilon = coeffs['epsilon']
+
+    logD = alpha + (beta * fO2) + (chi * nbo_t) + (delta * (1 / temperature)) + (epsilon * (pressure / temperature))
+    D = 10 ** logD
+
+    return D
+
+cottrell = []
+for index, i in enumerate(adiabatic_depths_earth):
+    temp = adiabatic_earth[index]
+    pressure = hydrostat_earth[index]
+    fO2 = -2.25
+    D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
+    cottrell.append(D)
+
+earth_droplet_radius = rFromWeberTurbulent(density_melt=densityMelt, density_droplet=densityDroplet,
+                                           gravity=surface_gravity)
+earth_velocity_turbulent = turbulentVelocity(gravity=surface_gravity, droplet_radius=earth_droplet_radius,
+                                           density_droplet=densityDroplet, density_melt=densityMelt)
+z_eq_10_minus2 = z_eq(radius_droplet=earth_droplet_radius, dynamic_viscosity=10**(-2), settling_velocity=earth_velocity_turbulent,
+                     diffusion_coeff=diffusivity, density_melt=densityMelt)
+t_eq_10_minus2 = z_eq_10_minus2 / earth_velocity_turbulent
+rounded_z_eq = 40
+rounded_t_eq = rounded_z_eq / earth_velocity_turbulent
+total_mesh_cells, total_time = getMeshSizeTimestep(z_eq=40, t_eq=rounded_t_eq, magma_ocean_depth=radius_earth)
+adiabat_step = linearizeAdiabat(z_eq=rounded_z_eq, magma_ocean_depth=radius_earth, adiabat=adiabatic_earth)
+hydrostatic_step = linearizeHydrostatic(z_eq=rounded_z_eq, magma_ocean_depth=radius_earth, hydrostatic=hydrostat_earth)
+moles_in_droplets = calcInitialMolesInDropletEarth(moles_core_of_vesta=1.0704 * 10**17,
+                                                   droplet_radius=earth_droplet_radius, vesta_core_radius=113 * 1000)
+
+print(earth_droplet_radius, earth_velocity_turbulent, z_eq_10_minus2, t_eq_10_minus2)
+print(rounded_z_eq, rounded_t_eq)
+print(total_mesh_cells, total_time, adiabat_step, hydrostatic_step)
+print(moles_in_droplets)
+
+diffusion_length = calcDiffusionLength(chem_diffusivity=diffusivity, droplet_radius=earth_droplet_radius,
+                                       settling_velocity=earth_velocity_turbulent)
+length_width = meltLengthWidth(diff_length=diffusion_length, droplet_radius=earth_droplet_radius)
+
+df_fO2_225 = pd.read_csv("earth_models/earth_fO2-225.csv")
+predicted_D_fO2_225 = df_fO2_225['D']
+depths_fO2_225 = df_fO2_225['z-depth']
+cell_temps = df_fO2_225['cell_temperature']
+cell_pressures = df_fO2_225['cell_pressure']
+recalc_concs_mesh_fO2_08, recalc_concs_objs_fO2_08, recalc_moles_mesh_fO2_08, recalc_moles_objs_fO2_08, recalc_verify_D_fO2_08 = \
+    recalcConcentration(predicted_d=predicted_D_fO2_225, original_moles_silicate=0.034937625,
+                                          original_moles_metal=1.9195542474206624 * 10**(-6), volume_mesh=(rounded_z_eq * (length_width**2)),
+                                          radius_object=earth_droplet_radius)
+reverse_recalc_concs_fO2_225 = forIterReverseD(obj_concs=recalc_concs_objs_fO2_08, cell_concs=recalc_concs_mesh_fO2_08)
+
+cottrell = []
+for index, i in enumerate(list(depths_fO2_225)):
+    temp = list(cell_temps)[index]
+    pressure = list(cell_pressures)[index]
+    fO2 = -2.25
+    D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
+    cottrell.append(D)
+
+fig6 = plt.figure()
+ax6 = fig6.add_subplot(111)
+ax6.plot(adiabatic_earth, cottrell, linestyle="--")
+ax6.plot(depths_fO2_225, reverse_recalc_concs_fO2_225)
 
 
 plt.show()
+
+
