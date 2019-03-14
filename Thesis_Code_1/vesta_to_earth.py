@@ -141,7 +141,7 @@ def calcInitialMolesInDropletEarth(moles_core_of_vesta, droplet_radius, vesta_co
 
 def iterReverseD(obj_concs, cell_concs, index=0, iterReverseDList=[]):
 
-    if index < len(list(obj_concs)):
+    if index <= len(list(obj_concs)):
         obj = list(obj_concs)[index]
         cell_concs_range = list(cell_concs)[0:index + 1]
         avg_cell_concs_range = sum(cell_concs_range) / (len(cell_concs_range))
@@ -207,7 +207,25 @@ def recalcConcentration(predicted_d, original_moles_silicate, original_moles_met
         concs_objs.append(new_obj_conc)
         verify_D.append(check_D)
 
-    return concs_mesh[1:], concs_objs[1:], moles_mesh[1:], moles_objs[1:], verify_D[1:]
+    return concs_mesh, concs_objs, moles_mesh, moles_objs, verify_D
+
+
+def calcInitialDropletConcentration(moles_droplet, radius_droplet):
+    volume_droplet = (4 / 3) * pi * (radius_droplet**3)
+    conc_droplet = moles_droplet / volume_droplet
+    return conc_droplet
+
+def calcInitialMeshConcentration(initial_moles_melt, length, width, height):
+    volume_cell = length * width * height
+    print(length, width, height, volume_cell)
+    initial_conc = initial_moles_melt / volume_cell
+    return initial_conc
+
+def calcInitialDistributionCoefficient(conc_droplet, initial_moles_melt, length, width, height):
+    volume_mesh = (length * width * height)
+    conc_melt = initial_moles_melt / volume_mesh
+    initial_D = conc_droplet / conc_melt
+    return initial_D
 
 
 
@@ -224,12 +242,14 @@ thermal_diffusivity = 10**(-6)
 surface_gravity = 9.8
 etas = [10 ** (-4.0), 10 ** (-3.5), 10 ** (-3.0), 10 ** (-2.5), 10 ** (-2.0), 10 ** (-1.5), 10 ** (-1.0), 10 ** (-0.5), 10 ** (0)]
 droplet_radius_samples = [0.001, 0.005, 0.01, 0.015, 0.02]
+surface_temperature = 2000
+fO2 = -2.25
 
 
 
 adiabatic_depths_earth, adiabatic_earth = adiabat(
     current_depth=0 / 1000,  # begin at surface
-    current_temperature=2000,  # degrees K
+    current_temperature=surface_temperature,  # degrees K
     depth_increment=depth_increment,  # 10 km interval
     depth=radius_earth,  # to depth of 250 km
     gravity=surface_gravity,  # m/s^2, Earth
@@ -252,7 +272,7 @@ hydrostatic_depths_earth, hydrostat_earth = hydrostatic(
 
 adiabatic_depths_vesta, adiabatic_vesta = adiabat(
     current_depth=0 / 1000,  # begin at surface
-    current_temperature=2000,  # degrees K
+    current_temperature=surface_temperature,  # degrees K
     depth_increment=depth_increment,  # 10 km interval
     depth=265 * 1000,  # to depth of 250 km
     gravity=0.25,  # m/s^2, Vesta
@@ -439,7 +459,6 @@ cottrell = []
 for index, i in enumerate(adiabatic_depths_earth):
     temp = adiabatic_earth[index]
     pressure = hydrostat_earth[index]
-    fO2 = -2.25
     D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
     cottrell.append(D)
 
@@ -458,27 +477,29 @@ hydrostatic_step = linearizeHydrostatic(total_mesh_cells=total_mesh_cells, magma
 moles_in_droplets = calcInitialMolesInDropletEarth(moles_core_of_vesta=1.0704 * 10**17,
                                                    droplet_radius=earth_droplet_radius, vesta_core_radius=113 * 1000)
 
-print(earth_droplet_radius, earth_velocity_turbulent, z_eq_10_minus2, t_eq_10_minus2)
-print(rounded_z_eq, rounded_t_eq)
-print(total_mesh_cells, total_time, adiabat_step, hydrostatic_step)
-print(moles_in_droplets)
 
-print(hydrostat_earth[-1])
+# print(earth_droplet_radius, earth_velocity_turbulent, z_eq_10_minus2, t_eq_10_minus2)
+# print(rounded_z_eq, rounded_t_eq)
+# print(total_mesh_cells, total_time, adiabat_step, hydrostatic_step)
+# print(moles_in_droplets)
+#
+# print(hydrostat_earth[-1])
 
 diffusion_length = calcDiffusionLength(chem_diffusivity=diffusivity, droplet_radius=earth_droplet_radius,
                                        settling_velocity=earth_velocity_turbulent)
 length_width = meltLengthWidth(diff_length=diffusion_length, droplet_radius=earth_droplet_radius)
 
+
 df_fO2_225 = pd.read_csv("earth_models/earth_fO2-225.csv")
 predicted_D_fO2_225 = df_fO2_225['D']
-depths_fO2_225 = df_fO2_225['z-depth']
+depths_fO2_225 = [0] + list(df_fO2_225['z-depth'])
 cell_temps = df_fO2_225['cell_temperature']
 cell_pressures = df_fO2_225['cell_pressure']
-recalc_concs_mesh_fO2_08, recalc_concs_objs_fO2_08, recalc_moles_mesh_fO2_08, recalc_moles_objs_fO2_08, recalc_verify_D_fO2_08 = \
+recalc_concs_mesh_fO2_225, recalc_concs_objs_fO2_225, recalc_moles_mesh_fO2_225, recalc_moles_objs_fO2_225, recalc_verify_D_fO2_225 = \
     recalcConcentration(predicted_d=predicted_D_fO2_225, original_moles_silicate=0.034937625,
                                           original_moles_metal=1.9195542474206624 * 10**(-6), volume_mesh=(rounded_z_eq * (length_width**2)),
                                           radius_object=earth_droplet_radius)
-reverse_recalc_concs_fO2_225 = forIterReverseD(obj_concs=recalc_concs_objs_fO2_08, cell_concs=recalc_concs_mesh_fO2_08)
+reverse_recalc_concs_fO2_225 = forIterReverseD(obj_concs=recalc_concs_objs_fO2_225, cell_concs=recalc_concs_mesh_fO2_225)
 
 cottrell = []
 for index, i in enumerate(list(depths_fO2_225)):
@@ -488,16 +509,73 @@ for index, i in enumerate(list(depths_fO2_225)):
     D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
     cottrell.append(D)
 
+difference_bulk_cottrell = [i - j for i, j in zip(reverse_recalc_concs_fO2_225, cottrell)]
+
 fig6 = plt.figure()
 ax6 = fig6.add_subplot(111)
-ax6.plot([i / 1000 for i in list(depths_fO2_225)[:-1]], cottrell[:-1], linestyle="--")
-ax6.plot([i / 1000 for i in list(depths_fO2_225)[:-1]], reverse_recalc_concs_fO2_225)
+ax6.plot([i / 1000 for i in list(depths_fO2_225)], cottrell, linestyle="--", label="Cottrell et al 2009")
+ax6.plot([i / 1000 for i in list(depths_fO2_225)], reverse_recalc_concs_fO2_225, label='Bulk D at Depth (averaged melt conc.)')
+ax6.set_title("Averaged W Distribution Coefficient vs. Local Cottrell et al. 2009 W Partitioning Model (Earth)")
+ax6.set_ylabel("Partition Coefficient (D)")
+ax6.set_xlabel("Depth (km)")
+ax6.grid()
+ax6.legend(loc='upper right')
+
+fig7 = plt.figure()
+ax7 = fig7.add_subplot(211)
+ax7.plot([i / 1000 for i in list(depths_fO2_225)], difference_bulk_cottrell)
+ax7.set_title("Difference Between Averaged W Distribution Coefficient vs. Local Cottrell et al. "
+              "2009 W Partitioning Model (Earth)")
+ax7.set_ylabel("Difference in Partition Coefficient, D")
+ax7.grid()
+ax7_2 = fig7.add_subplot(212)
+ax7_2.plot([i / 1000 for i in list(depths_fO2_225)], [(i / j) * 100 for i, j in zip(difference_bulk_cottrell, cottrell)])
+ax7_2.set_xlabel("Depth (km)")
+ax7_2.set_ylabel("Percent Deviation in Partition Coefficient (D) (%)")
+ax7_2.grid()
+
+
+
+
+
+# add the initial concentrations
+# initial_moles_melt = 0.034937625
+# initial_moles_droplet = 1.9195542474206624 * 10**(-6)
+# initial_conc_droplet = calcInitialDropletConcentration(moles_droplet=initial_moles_droplet,
+#                                                        radius_droplet=earth_droplet_radius)
+# initial_conc_mesh = calcInitialMeshConcentration(initial_moles_melt=initial_moles_melt, length=length_width,
+#                                                 width=length_width, height=rounded_z_eq)
+# print(initial_conc_droplet, initial_conc_mesh, initial_conc_droplet / initial_conc_mesh)
+# initial_dist_coeff = calcInitialDistributionCoefficient(conc_droplet=initial_conc_droplet, length=length_width,
+#                                                         width=length_width, height=rounded_z_eq,
+#                                                         initial_moles_melt=initial_moles_melt)
+#
+# added_0_km_depths_fO2_225 = ([0] + list(depths_fO2_225))
+# added_0_km_cottrell_fO2_225 = cottrellModel(pressure=0, temperature=surface_temperature, fO2=fO2) + predicted_D_fO2_225
+# added_0_km_recalc_concs_objs_fO2_225 = [initial_conc_droplet] + list(recalc_concs_objs_fO2_225)
+# added_0_km_recalc_mesh_concs = [initial_conc_mesh] + list(recalc_concs_mesh_fO2_225)
+# added_0_km_reverse_recalc_concs_fO2_225 = forIterReverseD(obj_concs=added_0_km_recalc_concs_objs_fO2_225,
+#                                                           cell_concs=added_0_km_recalc_mesh_concs)
+# added_0_km_local_d_fO2_225 = [initial_conc_droplet / initial_conc_mesh] + list(predicted_D_fO2_225)
+#
+# fig8 = plt.figure()
+# ax8 = fig8.add_subplot(111)
+# ax8.plot(added_0_km_depths_fO2_225, added_0_km_reverse_recalc_concs_fO2_225, linewidth=2.0, label="Averaged D")
+# ax8.plot(added_0_km_depths_fO2_225, added_0_km_local_d_fO2_225, linewidth=2.0, label="Local D")
+# ax8.plot(added_0_km_depths_fO2_225, added_0_km_cottrell_fO2_225, linewidth=2.0, linestyle="--", label="Cottrell et al 2009")
+# ax8.set_title("Averaged Distribution Coefficient vs. Cottrell et al. 2009 (Earth) (with Vesta initial)")
+# ax8.set_xlabel("Depth (km)")
+# ax8.set_ylabel("Distribution Coefficient (D)")
+# ax8.grid()
+# ax8.legend(loc='upper left')
+
+
+
+
+
+
+
 
 
 plt.show()
-
-
-
-
-# need to fix the linearized hydrostatic and adiabatic gradients
 
