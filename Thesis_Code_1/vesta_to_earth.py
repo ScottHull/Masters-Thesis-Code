@@ -227,6 +227,12 @@ def calcInitialDistributionCoefficient(conc_droplet, initial_moles_melt, length,
     initial_D = conc_droplet / conc_melt
     return initial_D
 
+def calcNumTotalDroplets(core_radius, droplet_radius):
+    core_volume = (4/3) * pi * (core_radius**3)
+    droplet_volume = (4/3) * pi * (droplet_radius**3)
+    num_droplets = core_volume / droplet_volume
+    return num_droplets
+
 
 
 radius_earth = 520 * 1000  # 1000 km
@@ -462,6 +468,7 @@ for index, i in enumerate(adiabatic_depths_earth):
     D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
     cottrell.append(D)
 
+total_num_vesta_droplets = droplet
 earth_droplet_radius = rFromWeberTurbulent(density_melt=densityMelt, density_droplet=densityDroplet,
                                            gravity=surface_gravity)
 earth_velocity_turbulent = turbulentVelocity(gravity=surface_gravity, droplet_radius=earth_droplet_radius,
@@ -501,38 +508,38 @@ recalc_concs_mesh_fO2_225, recalc_concs_objs_fO2_225, recalc_moles_mesh_fO2_225,
                                           radius_object=earth_droplet_radius)
 reverse_recalc_concs_fO2_225 = forIterReverseD(obj_concs=recalc_concs_objs_fO2_225, cell_concs=recalc_concs_mesh_fO2_225)
 
-cottrell = []
-for index, i in enumerate(list(depths_fO2_225)):
-    temp = list(cell_temps)[index]
-    pressure = list(cell_pressures)[index]
-    fO2 = -2.25
-    D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
-    cottrell.append(D)
-
-difference_bulk_cottrell = [i - j for i, j in zip(reverse_recalc_concs_fO2_225, cottrell)]
-
-fig6 = plt.figure()
-ax6 = fig6.add_subplot(111)
-ax6.plot([i / 1000 for i in list(depths_fO2_225)], cottrell, linestyle="--", label="Cottrell et al 2009")
-ax6.plot([i / 1000 for i in list(depths_fO2_225)], reverse_recalc_concs_fO2_225, label='Bulk D at Depth (averaged melt conc.)')
-ax6.set_title("Averaged W Distribution Coefficient vs. Local Cottrell et al. 2009 W Partitioning Model (Earth)")
-ax6.set_ylabel("Partition Coefficient (D)")
-ax6.set_xlabel("Depth (km)")
-ax6.grid()
-ax6.legend(loc='upper right')
-
-fig7 = plt.figure()
-ax7 = fig7.add_subplot(211)
-ax7.plot([i / 1000 for i in list(depths_fO2_225)], difference_bulk_cottrell)
-ax7.set_title("Difference Between Averaged W Distribution Coefficient vs. Local Cottrell et al. "
-              "2009 W Partitioning Model (Earth)")
-ax7.set_ylabel("Difference in Partition Coefficient, D")
-ax7.grid()
-ax7_2 = fig7.add_subplot(212)
-ax7_2.plot([i / 1000 for i in list(depths_fO2_225)], [(i / j) * 100 for i, j in zip(difference_bulk_cottrell, cottrell)])
-ax7_2.set_xlabel("Depth (km)")
-ax7_2.set_ylabel("Percent Deviation in Partition Coefficient (D) (%)")
-ax7_2.grid()
+# cottrell = []
+# for index, i in enumerate(list(depths_fO2_225)):
+#     temp = list(cell_temps)[index]
+#     pressure = list(cell_pressures)[index]
+#     fO2 = -2.25
+#     D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
+#     cottrell.append(D)
+#
+# difference_bulk_cottrell = [i - j for i, j in zip(reverse_recalc_concs_fO2_225, cottrell)]
+#
+# fig6 = plt.figure()
+# ax6 = fig6.add_subplot(111)
+# ax6.plot([i / 1000 for i in list(depths_fO2_225)], cottrell, linestyle="--", label="Cottrell et al 2009")
+# ax6.plot([i / 1000 for i in list(depths_fO2_225)], reverse_recalc_concs_fO2_225, label='Bulk D at Depth (averaged melt conc.)')
+# ax6.set_title("Averaged W Distribution Coefficient vs. Local Cottrell et al. 2009 W Partitioning Model (Earth)")
+# ax6.set_ylabel("Partition Coefficient (D)")
+# ax6.set_xlabel("Depth (km)")
+# ax6.grid()
+# ax6.legend(loc='upper right')
+#
+# fig7 = plt.figure()
+# ax7 = fig7.add_subplot(211)
+# ax7.plot([i / 1000 for i in list(depths_fO2_225)], difference_bulk_cottrell)
+# ax7.set_title("Difference Between Averaged W Distribution Coefficient vs. Local Cottrell et al. "
+#               "2009 W Partitioning Model (Earth)")
+# ax7.set_ylabel("Difference in Partition Coefficient, D")
+# ax7.grid()
+# ax7_2 = fig7.add_subplot(212)
+# ax7_2.plot([i / 1000 for i in list(depths_fO2_225)], [(i / j) * 100 for i, j in zip(difference_bulk_cottrell, cottrell)])
+# ax7_2.set_xlabel("Depth (km)")
+# ax7_2.set_ylabel("Percent Deviation in Partition Coefficient (D) (%)")
+# ax7_2.grid()
 
 
 
@@ -570,7 +577,7 @@ ax7_2.grid()
 # ax8.legend(loc='upper left')
 
 
-
+print()
 
 
 

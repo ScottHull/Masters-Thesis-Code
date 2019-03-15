@@ -261,8 +261,10 @@ ax5_2.legend(loc='lower left')
 # for i in a:
 #     print('%.4E' % Decimal(str(i)))
 
-fig6 = plt.figure()
-ax6 = fig6.add_subplot(111)
-ax6.plot(depth_fO2_08, concs_mesh_fO2_08, linewidth=2.0, label=)
+print(num_dropelts_vesta)
+
+# fig6 = plt.figure()
+# ax6 = fig6.add_subplot(111)
+# ax6.plot(depth_fO2_08, concs_mesh_fO2_08, linewidth=2.0, label=)
 
 plt.show()
