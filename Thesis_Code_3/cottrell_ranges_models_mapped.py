@@ -159,9 +159,6 @@ for i in fO2_list:
     cottrell_model_earth.append(temp_d_earth)
 
 
-print(vesta_adiabatic[-1], earth_adiabatic[-1], vesta_hydrostat[-1], earth_hydrostat[-1])
-
-
 # adiabatic/hydrostatic gradient figure
 fig1 = plt.figure()
 ax1_0 = fig1.add_subplot(111)
