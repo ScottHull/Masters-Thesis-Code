@@ -78,6 +78,88 @@ def hydrostatic(current_depth, depth_increment, depth, gravity, density_melt, cu
         return depth_gradient, pressure_gradient
 
 
+def calcNumTotalDroplets(core_radius, droplet_radius):
+    core_volume = (4 / 3) * pi * (core_radius ** 3)
+    droplet_volume = (4 / 3) * pi * (droplet_radius ** 3)
+    num_droplets = core_volume / droplet_volume
+    return num_droplets
+
+
+def iterReverseD(obj_cincs, cell_cincs, index=0, iterReverseDList=[]):
+    if index < len(list(obj_cincs)):
+        obj = list(obj_cincs)[index]
+        cell_cincs_range = list(cell_cincs)[0:index + 1]
+        avg_cell_cincs_range = sum(cell_cincs_range) / (len(cell_cincs_range))
+        # print(cell_cincs[index], avg_cell_cincs_range)
+        avg_D = obj / avg_cell_cincs_range
+        iterReverseDList.append(avg_D)
+        return iterReverseD(obj_cincs=obj_cincs, cell_cincs=cell_cincs, index=(index + 1),
+                            iterReverseDList=iterReverseDList)
+    else:
+        return iterReverseDList
+
+
+def forIterReverseD(obj_cincs, cell_cincs):
+    iterReverseDList = []
+    for index in range(len(list(obj_cincs))):
+        if index + 1 < len(list(obj_cincs)):
+            obj = list(obj_cincs)[index]
+            cell_cincs_range = list(cell_cincs)[0:index + 1]
+            avg_cell_cincs_range = sum(cell_cincs_range) / (len(cell_cincs_range))
+            # print(cell_cincs[index], avg_cell_cincs_range)
+            avg_D = obj / avg_cell_cincs_range
+            iterReverseDList.append(avg_D)
+        else:
+            return iterReverseDList
+
+
+def calcDiffusiinLength(chem_diffusivity, droplet_radius, settling_velocity):
+    l = sqrt((2 * chem_diffusivity * droplet_radius) / settling_velocity)
+    return l
+
+
+def meltLengthWidth(diff_length, droplet_radius):
+    length_width = (2 * droplet_radius) + (2 * diff_length)
+    return length_width
+
+
+def recalcCincentratiin(predicted_d, original_moles_silicate, original_moles_metal, volume_mesh, radius_object):
+    volume_obj = (4 / 3) * pi * (radius_object ** 3)
+
+    original_cinc_silicate = original_moles_silicate / volume_mesh
+    original_cinc_metal = original_moles_metal / volume_obj
+    cincs_mesh = [original_cinc_silicate]
+    cincs_objs = [original_cinc_metal]
+    moles_mesh = [original_moles_silicate]
+    moles_objs = [original_moles_metal]
+    verify_D = []
+    for index, d in enumerate(list(predicted_d)):
+        old_moles_obj = moles_objs[index - 1]
+        old_moles_cell = moles_mesh[index - 1]
+
+        adj_matrix = (old_moles_cell /
+                      (1 + (3 * volume_mesh * (
+                              (4 * pi * (radius_object ** 3) * d) ** (-1)))))
+        adj_object = (old_moles_obj /
+                      (1 + (4 * pi * (radius_object ** 3) * d) * (
+                              (3 ** (-1)) * (volume_mesh ** (-1)))))
+        adj_moles = adj_matrix - adj_object
+
+        # adjust the moles of the element in the object and matrix, respectively
+        new_moles_obj = old_moles_obj + adj_moles
+        new_moles_cell = old_moles_cell - adj_moles
+        new_obj_cinc = new_moles_obj / volume_obj
+        new_mesh_cinc = new_moles_cell / volume_mesh
+        check_D = new_obj_cinc / new_mesh_cinc
+        moles_objs.append(new_moles_obj)
+        moles_mesh.append(new_moles_cell)
+        cincs_mesh.append(new_mesh_cinc)
+        cincs_objs.append(new_obj_cinc)
+        verify_D.append(check_D)
+
+    return cincs_mesh, cincs_objs, moles_mesh, moles_objs, verify_D
+
+
 earth_magma_ocean_depth = 520 * 1000
 earth_magma_ocean_depth_increment = 260 * 10
 earth_surface_gravity = 9.8
@@ -138,6 +220,57 @@ vesta_hydrostatic_depths, vesta_hydrostat = hydrostatic(
     depth_gradient=[0],
     pressure_gradient=[0],
 )
+
+droplet_radius = 0.0185
+diff_length = calcDiffusiinLength(chem_diffusivity=10**-8, settling_velocity=0.2580697580112788, droplet_radius=droplet_radius)
+vesta_z_eq_1_thru_4 = 240
+vesta_z_eq_5_thru_8 = 600
+vesta_vol_mesh_1_thru_4 = (diff_length**2) * vesta_z_eq_1_thru_4
+vesta_vol_mesh_5_thru_8 = (diff_length**2) * vesta_z_eq_5_thru_8
+
+vesta_1 = pd.read_csv("thesis_model_outputs/Vesta_1.csv")
+vesta_2 = pd.read_csv("thesis_model_outputs/Vesta_2.csv")
+vesta_3 = pd.read_csv("thesis_model_outputs/Vesta_3.csv")
+vesta_4 = pd.read_csv("thesis_model_outputs/Vesta_4.csv")
+vesta_5 = pd.read_csv("thesis_model_outputs/Vesta_5.csv")
+vesta_6 = pd.read_csv("thesis_model_outputs/Vesta_6.csv")
+vesta_7 = pd.read_csv("thesis_model_outputs/Vesta_7.csv")
+vesta_8 = pd.read_csv("thesis_model_outputs/Vesta_8.csv")
+
+depth_vesta_1 = [i / 1000 for i in [0] + list(vesta_1['z-depth'])]
+depth_vesta_2 = [i / 1000 for i in [0] + list(vesta_2['z-depth'])]
+depth_vesta_3 = [i / 1000 for i in [0] + list(vesta_3['z-depth'])]
+depth_vesta_4 = [i / 1000 for i in [0] + list(vesta_4['z-depth'])]
+depth_vesta_5 = [i / 1000 for i in [0] + list(vesta_5['z-depth'])]
+depth_vesta_6 = [i / 1000 for i in [0] + list(vesta_6['z-depth'])]
+depth_vesta_7 = [i / 1000 for i in [0] + list(vesta_7['z-depth'])]
+depth_vesta_8 = [i / 1000 for i in [0] + list(vesta_8['z-depth'])]
+
+cincs_mesh_vesta_1, cincs_objs_vesta_1, moles_mesh_vesta_1, moles_objs_vesta_1, verify_D_vesta_1 = recalcCincentratiin(predicted_d=vesta_1['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
+cincs_mesh_vesta_2, cincs_objs_vesta_2, moles_mesh_vesta_2, moles_objs_vesta_2, verify_D_vesta_2 = recalcCincentratiin(predicted_d=vesta_2['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
+cincs_mesh_vesta_3, cincs_objs_vesta_3, moles_mesh_vesta_3, moles_objs_vesta_3, verify_D_vesta_3 = recalcCincentratiin(predicted_d=vesta_3['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
+cincs_mesh_vesta_4, cincs_objs_vesta_4, moles_mesh_vesta_4, moles_objs_vesta_4, verify_D_vesta_4 = recalcCincentratiin(predicted_d=vesta_4['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
+cincs_mesh_vesta_5, cincs_objs_vesta_5, moles_mesh_vesta_5, moles_objs_vesta_5, verify_D_vesta_5 = recalcCincentratiin(predicted_d=vesta_5['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
+cincs_mesh_vesta_6, cincs_objs_vesta_6, moles_mesh_vesta_6, moles_objs_vesta_6, verify_D_vesta_6 = recalcCincentratiin(predicted_d=vesta_6['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
+cincs_mesh_vesta_7, cincs_objs_vesta_7, moles_mesh_vesta_7, moles_objs_vesta_7, verify_D_vesta_7 = recalcCincentratiin(predicted_d=vesta_7['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
+cincs_mesh_vesta_8, cincs_objs_vesta_8, moles_mesh_vesta_8, moles_objs_vesta_8, verify_D_vesta_8 = recalcCincentratiin(predicted_d=vesta_8['D'],
+                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
+
+reverse_D_vesta_1 = forIterReverseD(obj_cincs=cincs_objs_vesta_1, cell_cincs=cincs_mesh_vesta_1)
+reverse_D_vesta_2 = forIterReverseD(obj_cincs=cincs_objs_vesta_2, cell_cincs=cincs_mesh_vesta_2)
+reverse_D_vesta_3 = forIterReverseD(obj_cincs=cincs_objs_vesta_3, cell_cincs=cincs_mesh_vesta_3)
+reverse_D_vesta_4 = forIterReverseD(obj_cincs=cincs_objs_vesta_4, cell_cincs=cincs_mesh_vesta_4)
+reverse_D_vesta_5 = forIterReverseD(obj_cincs=cincs_objs_vesta_5, cell_cincs=cincs_mesh_vesta_5)
+reverse_D_vesta_6 = forIterReverseD(obj_cincs=cincs_objs_vesta_6, cell_cincs=cincs_mesh_vesta_6)
+reverse_D_vesta_7 = forIterReverseD(obj_cincs=cincs_objs_vesta_7, cell_cincs=cincs_mesh_vesta_7)
+reverse_D_vesta_8 = forIterReverseD(obj_cincs=cincs_objs_vesta_8, cell_cincs=cincs_mesh_vesta_8)
 
 cottrell_model_vesta = []
 cottrell_model_earth = []
@@ -242,8 +375,38 @@ ax3_2.fill_between(earth_hydrostatic_depths, cottrell_model_earth[2], cottrell_m
 ax3_2.grid()
 ax3_2.legend(loc='upper right')
 
-
-
+# eta = 10^-3.5 model mapped to earth
+fig4 = plt.figure()
+ax4_0 = fig4.add_subplot(111)
+ax4_1 = fig4.add_subplot(211)
+ax4_2 = fig4.add_subplot(212)
+# Turn off axis lines and ticks of the big subplot
+ax4_0.spines['top'].set_color('none')
+ax4_0.spines['bottom'].set_color('none')
+ax4_0.spines['left'].set_color('none')
+ax4_0.spines['right'].set_color('none')
+ax4_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax4_0.xaxis.labelpad = 20
+ax4_0.yaxis.labelpad = 20
+ax4_0.set_xlabel("Depth (km)")
+ax4_0.set_ylabel("D")
+ax4_0.set_title("Predicted Partition Coefficients for an Earth Magma Ocean ($\eta$=10$^{-3.5}$)")
+ax4_1.plot(earth_hydrostatic_depths, cottrell_model_earth[0], color='black')
+ax4_1.plot(earth_hydrostatic_depths, cottrell_model_earth[1], color='black')
+ax4_1.fill_between(earth_hydrostatic_depths, cottrell_model_earth[0], cottrell_model_earth[1], color='red', alpha=0.4,
+                   label="Earth Oxidizing Model")
+ax4_1.fill_between(earth_hydrostatic_depths, [list(vesta_1['D'])[-1] for i in earth_hydrostatic_depths],
+                   [list(vesta_2['D'])[-1] for i in earth_hydrostatic_depths], color='blue', label='Final D on Vesta')
+ax4_1.grid()
+ax4_1.legend(loc='upper right')
+ax4_2.plot(earth_hydrostatic_depths, cottrell_model_earth[2], color='black')
+ax4_2.plot(earth_hydrostatic_depths, cottrell_model_earth[3], color='black')
+ax4_2.fill_between(earth_hydrostatic_depths, cottrell_model_earth[2], cottrell_model_earth[3], color='red', alpha=0.4,
+                   label="Earth Reducing Model")
+ax4_2.fill_between(earth_hydrostatic_depths, [list(vesta_3['D'])[-1] for i in earth_hydrostatic_depths],
+                   [list(vesta_4['D'])[-1] for i in earth_hydrostatic_depths], color='blue', label='Final D on Vesta')
+ax4_2.grid()
+ax4_2.legend(loc='upper right')
 
 
 
