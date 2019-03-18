@@ -6,6 +6,8 @@ from math import log, exp
 import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
+plt.rcParams.update({'font.size': 16})
+
 
 def decay(half_life, curr_nuclii, max_time, timestep, current_time, original_nuclii, rad_list=[]):
     decay_const = log(0.5) / half_life
@@ -121,12 +123,12 @@ for index, i in enumerate(sample_name_list):
                  (time_list[my_5_index], w_182_w_184_list_avgs[my_5_index]), xytext=(20.2, 0.42),
                  arrowprops=dict(facecolor='black', shrink=0.05))
     ax2.annotate("Avg. 182W/184W (100 my) = {}".format(round(float(w_182_w_184_list_avgs[-1]), 6)),
-                 (time_list[-1], w_182_w_184_list_avgs[-1]), xytext=(60.2, 0.62),
+                 (time_list[-1], w_182_w_184_list_avgs[-1]), xytext=(70.2, 0.62),
                  arrowprops=dict(facecolor='black', shrink=0.05))
 
 ax2.plot(time_list, w_182_w_184_list_avgs, label="Average 182W/184W", linestyle="--")
 
-ax2.legend(loc='center right')
+ax2.legend(loc='lower right')
 
 fig3 = plt.figure()
 ax3 = fig3.add_subplot(111)

@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib as mpl; mpl.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
+plt.rcParams.update({'font.size': 16})
 
 def dropletSize(density_melt, density_droplet, settling_velosity, weber_number=10, surface_tension=1):
     # Rubie et al 2003 suggests We=10 for stable droplet sizes
@@ -355,8 +356,8 @@ for index, i in enumerate(etas):
 
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(111)
-ax1.plot(etas, [i * 100 for i in radius_laminar_list], linewidth=2.0, label="Stable Radius (Laminar) (cm)")
-ax1.plot(etas, [i * 100 for i in radius_turbulent_list], linewidth=2.0, label="Stable Radius (Turbulent) (cm)")
+ax1.plot(etas, [i * 100 for i in radius_laminar_list], linewidth=2.0, color='blue', label="Stable Radius (Laminar) (cm)")
+ax1.plot(etas, [i * 100 for i in radius_turbulent_list], linewidth=2.0, color='green', label="Stable Radius (Turbulent) (cm)")
 ax1.axvspan(10 ** (-3.5), 10 ** (-1), color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
 ax1.set_title("Maximum Stable Droplet Radius vs. Dynamic Viscosity (Earth)")
 ax1.set_xlabel("Dynamic Viscosity (Pa s)")
@@ -377,8 +378,8 @@ ax2_2.set_ylabel("Settling Velocity (m/s)")
 ax1.axvspan(10 ** (-3.5), 10 ** (-1), color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
 ax2.grid()
 ax2_2.grid()
-ax2.legend(loc='upper left')
-ax2_2.legend(loc='upper left')
+ax2.legend(loc='upper right')
+ax2_2.legend(loc='upper right')
 ax2.set_xscale('log')
 ax2_2.set_xscale('log')
 
@@ -393,7 +394,7 @@ ax3.set_ylabel("Settling Velocity (m/s)")
 ax3.axvspan(radius_laminar_list[etas.index(10 ** (-3.5))] * 100, radius_laminar_list[etas.index(10 ** (-1.0))] * 100,
             color='red', alpha=0.2, label="Magma Ocean Viscosity Range")
 ax3.grid()
-ax3.legend(loc='upper left')
+ax3.legend(loc='upper right')
 
 fig4 = plt.figure()
 ax4 = fig4.add_subplot(111)
@@ -468,7 +469,7 @@ for index, i in enumerate(adiabatic_depths_earth):
     D = cottrellModel(pressure=pressure, temperature=temp, fO2=fO2)
     cottrell.append(D)
 
-total_num_vesta_droplets = droplet
+total_num_vesta_droplets = 0
 earth_droplet_radius = rFromWeberTurbulent(density_melt=densityMelt, density_droplet=densityDroplet,
                                            gravity=surface_gravity)
 earth_velocity_turbulent = turbulentVelocity(gravity=surface_gravity, droplet_radius=earth_droplet_radius,

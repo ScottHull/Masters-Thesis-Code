@@ -5,6 +5,7 @@ from math import pi, log, exp
 import matplotlib as mpl; mpl.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
+plt.rcParams.update({'font.size': 16})
 
 
 def collectCoeffsSimple(pressure, temperature):
@@ -186,6 +187,30 @@ ax1_1.legend(loc='upper left')
 ax1_2.legend(loc='upper left')
 ax1_1.set_xlim(0, max(vesta_adiabatic_depths))
 ax1_2.set_xlim(0, max(earth_adiabatic_depths))
+
+fig4 = plt.figure()
+ax4_0 = fig4.add_subplot(111)
+ax4_1 = fig4.add_subplot(211)
+ax4_2 = fig4.add_subplot(212)
+ax4_1.plot(vesta_hydrostatic_depths, vesta_hydrostat, linewidth=2.0, color='black', label='Vesta')
+ax4_2.plot(earth_hydrostatic_depths, earth_hydrostat, linewidth=2.0, color='black', label='Earth')
+# Turn off axis lines and ticks of the big subplot
+ax4_0.spines['top'].set_color('none')
+ax4_0.spines['bottom'].set_color('none')
+ax4_0.spines['left'].set_color('none')
+ax4_0.spines['right'].set_color('none')
+ax4_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax4_0.xaxis.labelpad = 20
+ax4_0.yaxis.labelpad = 20
+ax4_0.set_xlabel("Depth (km)")
+ax4_0.set_ylabel("Pressure (GPa)")
+ax4_0.set_title("Hydrostatic Pressure Profile for Vestian and Earth Magma Ocean")
+ax4_1.grid()
+ax4_2.grid()
+ax4_1.legend(loc='upper left')
+ax4_2.legend(loc='upper left')
+ax4_1.set_xlim(0, max(vesta_hydrostatic_depths))
+ax4_2.set_xlim(0, max(earth_hydrostatic_depths))
 
 # cottrell partition models for Vesta
 fig2 = plt.figure()
