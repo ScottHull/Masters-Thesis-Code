@@ -27,25 +27,54 @@ def turbulentVelocity(gravity, droplet_radius, density_droplet, density_melt, Cd
     v = sqrt(((4 * gravity * diameter) / (3 * Cd)) * ((density_droplet - density_melt) / density_melt))
     return v
 
-
-radii = np.arange(0.001, 0.02 + 0.001, 0.001)
-gravity = 9.8
+etas = [10**-3.5, 10**-1.0]
+radii = list(np.arange(0.001, 0.02 + 0.001, 0.001))
+gravity_vesta = 0.25
+gravity_earth = 9.8
 density_droplet = 7800
 density_melt = 3750
-eta = 10**-2
-diffusion_coeff = 10**-9
+diffusion_coeff = 10**-8
 
-velocities = []
-z_eqs = []
+velocities_vesta = []
+z_eqs_vesta = []
+velocities_earth = []
+z_eqs_earth = []
 
-for i in radii:
-    v = turbulentVelocity(gravity=gravity, density_melt=density_melt, density_droplet=density_droplet, droplet_radius=i)
-    z = z_eq(radius_droplet=i, dynamic_viscosity=eta, settling_velocity=v, diffusion_coeff=diffusion_coeff,
-             density_melt=density_melt)
-    velocities.append(v)
-    z_eqs.append(z)
-
+for eta in etas:
+    velocities_vesta_temp = []
+    z_eqs_vesta_temp = []
+    velocities_earth_temp = []
+    z_eqs_earth_temp = []
+    for i in radii:
+        v_earth = turbulentVelocity(gravity=gravity_earth, density_melt=density_melt, density_droplet=density_droplet,
+                                    droplet_radius=i)
+        z_earth = z_eq(radius_droplet=i, dynamic_viscosity=eta, settling_velocity=v_earth, diffusion_coeff=diffusion_coeff,
+                       density_melt=density_melt)
+        v_vesta = turbulentVelocity(gravity=gravity_vesta, density_melt=density_melt, density_droplet=density_droplet,
+                                    droplet_radius=i)
+        z_vesta = z_eq(radius_droplet=i, dynamic_viscosity=eta, settling_velocity=v_vesta, diffusion_coeff=diffusion_coeff,
+                       density_melt=density_melt)
+        velocities_vesta_temp.append(v_vesta)
+        z_eqs_vesta_temp.append(z_vesta)
+        velocities_earth_temp.append(v_earth)
+        z_eqs_earth_temp.append(z_earth)
+    velocities_vesta.append(velocities_vesta_temp)
+    z_eqs_vesta.append(z_eqs_vesta_temp)
+    velocities_earth.append(velocities_earth_temp)
+    z_eqs_earth.append(z_eqs_earth_temp)
 
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(111)
+ax1.plot([i * 100 for i in radii], z_eqs_vesta[0], linewidth=2.0, color='blue', label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-3.5}$)")
+ax1.plot([i * 100 for i in radii], z_eqs_earth[0], linewidth=2.0, color='red', label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-3.5}$)")
+ax1.plot([i * 100 for i in radii], z_eqs_vesta[1], linewidth=2.0, color='blue', linestyle="--", label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-1.0}$)")
+ax1.plot([i * 100 for i in radii], z_eqs_earth[1], linewidth=2.0, color='red', linestyle="--", label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-1.0}$)")
+ax1.set_xlabel("Droplet Radius (cm)")
+ax1.set_ylabel("z$_{eq}$ (m)")
+ax1.set_title("Droplet Radius vs. 99% Chemical Equilibration Distance")
+ax1.grid()
+ax1.legend(loc='upper left')
+
+
+plt.show()
 
