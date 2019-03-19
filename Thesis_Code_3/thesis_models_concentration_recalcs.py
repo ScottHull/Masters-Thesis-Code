@@ -2,7 +2,7 @@ import matplotlib as mpl
 mpl.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
-from math import log, exp, pi, sqrt
+from math import log, exp, pi, sqrt, log10
 import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from decimal import Decimal
@@ -31,8 +31,12 @@ def iterReverseD(obj_concs, cell_concs, index=0, iterReverseDList=[]):
     else:
         return iterReverseDList
     
-def forIterReverseD(obj_concs, cell_concs):
-    iterReverseDList = []
+def forIterReverseD(obj_concs, cell_concs, initial_moles_obj, initial_moles_mesh, volume_mesh, radius_droplet):
+    volume_obj = (4/3) * pi * (radius_droplet**3)
+    initial_conc_mesh = initial_moles_mesh / volume_mesh
+    initial_conc_obj = initial_moles_obj / volume_obj
+    initial_D = initial_conc_obj / initial_conc_mesh
+    iterReverseDList = [initial_D]
     for index in range(len(list(obj_concs))):
         if index + 1 < len(list(obj_concs)):
             obj = list(obj_concs)[index]
@@ -140,14 +144,14 @@ concs_mesh_vesta_7, concs_objs_vesta_7, moles_mesh_vesta_7, moles_objs_vesta_7, 
 concs_mesh_vesta_8, concs_objs_vesta_8, moles_mesh_vesta_8, moles_objs_vesta_8, verify_D_vesta_8 = recalcConcentration(predicted_d=vesta_8['D'],
                               original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
 
-reverse_D_vesta_1 = forIterReverseD(obj_concs=concs_objs_vesta_1, cell_concs=concs_mesh_vesta_1)
-reverse_D_vesta_2 = forIterReverseD(obj_concs=concs_objs_vesta_2, cell_concs=concs_mesh_vesta_2)
-reverse_D_vesta_3 = forIterReverseD(obj_concs=concs_objs_vesta_3, cell_concs=concs_mesh_vesta_3)
-reverse_D_vesta_4 = forIterReverseD(obj_concs=concs_objs_vesta_4, cell_concs=concs_mesh_vesta_4)
-reverse_D_vesta_5 = forIterReverseD(obj_concs=concs_objs_vesta_5, cell_concs=concs_mesh_vesta_5)
-reverse_D_vesta_6 = forIterReverseD(obj_concs=concs_objs_vesta_6, cell_concs=concs_mesh_vesta_6)
-reverse_D_vesta_7 = forIterReverseD(obj_concs=concs_objs_vesta_7, cell_concs=concs_mesh_vesta_7)
-reverse_D_vesta_8 = forIterReverseD(obj_concs=concs_objs_vesta_8, cell_concs=concs_mesh_vesta_8)
+# reverse_D_vesta_1 = forIterReverseD(obj_concs=concs_objs_vesta_1, cell_concs=concs_mesh_vesta_1)
+# reverse_D_vesta_2 = forIterReverseD(obj_concs=concs_objs_vesta_2, cell_concs=concs_mesh_vesta_2)
+# reverse_D_vesta_3 = forIterReverseD(obj_concs=concs_objs_vesta_3, cell_concs=concs_mesh_vesta_3)
+# reverse_D_vesta_4 = forIterReverseD(obj_concs=concs_objs_vesta_4, cell_concs=concs_mesh_vesta_4)
+# reverse_D_vesta_5 = forIterReverseD(obj_concs=concs_objs_vesta_5, cell_concs=concs_mesh_vesta_5)
+# reverse_D_vesta_6 = forIterReverseD(obj_concs=concs_objs_vesta_6, cell_concs=concs_mesh_vesta_6)
+# reverse_D_vesta_7 = forIterReverseD(obj_concs=concs_objs_vesta_7, cell_concs=concs_mesh_vesta_7)
+# reverse_D_vesta_8 = forIterReverseD(obj_concs=concs_objs_vesta_8, cell_concs=concs_mesh_vesta_8)
 
 # mesh concentrations
 fig1 = plt.figure()
@@ -304,14 +308,14 @@ concs_mesh_earth_7, concs_objs_earth_7, moles_mesh_earth_7, moles_objs_earth_7, 
 concs_mesh_earth_8, concs_objs_earth_8, moles_mesh_earth_8, moles_objs_earth_8, verify_D_earth_8 = recalcConcentration(predicted_d=earth_8['D'],
                               original_moles_silicate=0.27950089725326804, original_moles_metal=moles_per_droplet_earth_8, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=earth_droplet_radius)
 
-reverse_D_earth_1 = forIterReverseD(obj_concs=concs_objs_earth_1, cell_concs=concs_mesh_earth_1)
-reverse_D_earth_2 = forIterReverseD(obj_concs=concs_objs_earth_2, cell_concs=concs_mesh_earth_2)
-reverse_D_earth_3 = forIterReverseD(obj_concs=concs_objs_earth_3, cell_concs=concs_mesh_earth_3)
-reverse_D_earth_4 = forIterReverseD(obj_concs=concs_objs_earth_4, cell_concs=concs_mesh_earth_4)
-reverse_D_earth_5 = forIterReverseD(obj_concs=concs_objs_earth_5, cell_concs=concs_mesh_earth_5)
-reverse_D_earth_6 = forIterReverseD(obj_concs=concs_objs_earth_6, cell_concs=concs_mesh_earth_6)
-reverse_D_earth_7 = forIterReverseD(obj_concs=concs_objs_earth_7, cell_concs=concs_mesh_earth_7)
-reverse_D_earth_8 = forIterReverseD(obj_concs=concs_objs_earth_8, cell_concs=concs_mesh_earth_8)
+# reverse_D_earth_1 = forIterReverseD(obj_concs=concs_objs_earth_1, cell_concs=concs_mesh_earth_1)
+# reverse_D_earth_2 = forIterReverseD(obj_concs=concs_objs_earth_2, cell_concs=concs_mesh_earth_2)
+# reverse_D_earth_3 = forIterReverseD(obj_concs=concs_objs_earth_3, cell_concs=concs_mesh_earth_3)
+# reverse_D_earth_4 = forIterReverseD(obj_concs=concs_objs_earth_4, cell_concs=concs_mesh_earth_4)
+# reverse_D_earth_5 = forIterReverseD(obj_concs=concs_objs_earth_5, cell_concs=concs_mesh_earth_5)
+# reverse_D_earth_6 = forIterReverseD(obj_concs=concs_objs_earth_6, cell_concs=concs_mesh_earth_6)
+# reverse_D_earth_7 = forIterReverseD(obj_concs=concs_objs_earth_7, cell_concs=concs_mesh_earth_7)
+# reverse_D_earth_8 = forIterReverseD(obj_concs=concs_objs_earth_8, cell_concs=concs_mesh_earth_8)
 
 # mesh concentrations
 fig5 = plt.figure()
@@ -460,6 +464,149 @@ ratio_3 = [i / j for i, j in zip(concs_mesh_vesta_1, concs_mesh_vesta_5)]
 ratio_4 = [i / j for i, j in zip(concs_mesh_vesta_2, concs_mesh_vesta_6)]
 print(sum(ratio_3) / len(ratio_3))
 print(sum(ratio_4) / len(ratio_4))
+
+
+bulk_D_vesta_1 = forIterReverseD(cell_concs=concs_mesh_vesta_1, obj_concs=concs_objs_vesta_1,
+                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
+bulk_D_vesta_2 = forIterReverseD(cell_concs=concs_mesh_vesta_2, obj_concs=concs_objs_vesta_2,
+                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
+bulk_D_vesta_3 = forIterReverseD(cell_concs=concs_mesh_vesta_3, obj_concs=concs_objs_vesta_3,
+                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
+bulk_D_vesta_4 = forIterReverseD(cell_concs=concs_mesh_vesta_4, obj_concs=concs_objs_vesta_4,
+                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
+bulk_D_vesta_5 = forIterReverseD(cell_concs=concs_mesh_vesta_5, obj_concs=concs_objs_vesta_5,
+                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius)
+bulk_D_vesta_6 = forIterReverseD(cell_concs=concs_mesh_vesta_6, obj_concs=concs_objs_vesta_6, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius, initial_moles_obj=0)
+bulk_D_vesta_7 = forIterReverseD(cell_concs=concs_mesh_vesta_7, obj_concs=concs_objs_vesta_7, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius, initial_moles_obj=0)
+bulk_D_vesta_8 = forIterReverseD(cell_concs=concs_mesh_vesta_8, obj_concs=concs_objs_vesta_8, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius, initial_moles_obj=0)
+bulk_D_earth_1 = forIterReverseD(cell_concs=concs_mesh_earth_1, obj_concs=concs_objs_earth_1, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_1_thru_4, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_1)
+bulk_D_earth_2 = forIterReverseD(cell_concs=concs_mesh_earth_2, obj_concs=concs_objs_earth_2, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_1_thru_4, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_2)
+bulk_D_earth_3 = forIterReverseD(cell_concs=concs_mesh_earth_3, obj_concs=concs_objs_earth_3, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_1_thru_4, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_3)
+bulk_D_earth_4 = forIterReverseD(cell_concs=concs_mesh_earth_4, obj_concs=concs_objs_earth_4, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_5_thru_8, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_4)
+bulk_D_earth_5 = forIterReverseD(cell_concs=concs_mesh_earth_5, obj_concs=concs_objs_earth_5, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_5_thru_8, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_5)
+bulk_D_earth_6 = forIterReverseD(cell_concs=concs_mesh_earth_6, obj_concs=concs_objs_earth_6, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_5_thru_8, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_6)
+bulk_D_earth_7 = forIterReverseD(cell_concs=concs_mesh_earth_7, obj_concs=concs_objs_earth_7, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_5_thru_8, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_7)
+bulk_D_earth_8 = forIterReverseD(cell_concs=concs_mesh_earth_8, obj_concs=concs_objs_earth_8, initial_moles_mesh=0.27950089725326804,
+                                 volume_mesh=earth_vol_mesh_5_thru_8, radius_droplet=earth_droplet_radius, initial_moles_obj=moles_per_droplet_earth_8)
+
+fig21 = plt.figure()
+fig22 = plt.figure()
+ax21 = fig21.add_subplot(111)
+ax22 = fig22.add_subplot(111)
+ax21.plot(depth_vesta_1, bulk_D_vesta_1, linewidth=2.0, label='Vesta Model 1')
+ax21.plot(depth_vesta_2, bulk_D_vesta_2, linewidth=2.0, label='Vesta Model 2')
+ax21.plot(depth_vesta_3, bulk_D_vesta_3, linewidth=2.0, label='Vesta Model 3')
+ax21.plot(depth_vesta_4, bulk_D_vesta_4, linewidth=2.0, label='Vesta Model 4')
+ax21.plot(depth_vesta_5, bulk_D_vesta_5, linewidth=2.0, label='Vesta Model 5')
+ax21.plot(depth_vesta_6, bulk_D_vesta_6, linewidth=2.0, label='Vesta Model 6')
+ax21.plot(depth_vesta_7, bulk_D_vesta_7, linewidth=2.0, label='Vesta Model 7')
+ax21.plot(depth_vesta_8, bulk_D_vesta_8, linewidth=2.0, label='Vesta Model 8')
+ax22.plot(depth_earth_1, bulk_D_earth_1, linewidth=2.0, label='Earth Model 1')
+ax22.plot(depth_earth_2, bulk_D_earth_2, linewidth=2.0, label='Earth Model 2')
+ax22.plot(depth_earth_3, bulk_D_earth_3, linewidth=2.0, label='Earth Model 3')
+ax22.plot(depth_earth_4, bulk_D_earth_4, linewidth=2.0, label='Earth Model 4')
+ax22.plot(depth_earth_5, bulk_D_earth_5, linewidth=2.0, label='Earth Model 5')
+ax22.plot(depth_earth_6, bulk_D_earth_6, linewidth=2.0, label='Earth Model 6')
+ax22.plot(depth_earth_7, bulk_D_earth_7, linewidth=2.0, label='Earth Model 7')
+ax22.plot(depth_earth_8, bulk_D_earth_8, linewidth=2.0, label='Earth Model 8')
+ax22.axhline(40, linewidth=2.0, linestyle="--", color='red', label='Observed Earth Bulk D')
+ax21.set_title("Bulk D For Modeled Vesta")
+ax21.set_xlabel("Depth (km)")
+ax21.set_ylabel("Bulk D")
+ax22.set_title("Bulk D For Modeled Earth")
+ax22.set_xlabel("Depth (km)")
+ax22.set_ylabel("Bulk D")
+ax21.grid()
+ax22.grid()
+ax21.legend(loc='upper right')
+ax22.legend(loc='upper right')
+
+fig23 = plt.figure()
+fig24 = plt.figure()
+ax23 = fig23.add_subplot(111)
+ax24 = fig24.add_subplot(111)
+ax23.plot(depth_vesta_1, bulk_D_vesta_1, linewidth=2.0, label='Vesta Model 1')
+ax23.plot(depth_vesta_2, bulk_D_vesta_2, linewidth=2.0, label='Vesta Model 2')
+ax23.plot(depth_vesta_3, bulk_D_vesta_3, linewidth=2.0, label='Vesta Model 3')
+ax23.plot(depth_vesta_4, bulk_D_vesta_4, linewidth=2.0, label='Vesta Model 4')
+ax23.plot(depth_vesta_5, bulk_D_vesta_5, linewidth=2.0, label='Vesta Model 5')
+ax23.plot(depth_vesta_6, bulk_D_vesta_6, linewidth=2.0, label='Vesta Model 6')
+ax23.plot(depth_vesta_7, bulk_D_vesta_7, linewidth=2.0, label='Vesta Model 7')
+ax23.plot(depth_vesta_8, bulk_D_vesta_8, linewidth=2.0, label='Vesta Model 8')
+ax24.plot(depth_earth_1, bulk_D_earth_1, linewidth=2.0, label='Earth Model 1')
+ax24.plot(depth_earth_2, bulk_D_earth_2, linewidth=2.0, label='Earth Model 2')
+ax24.plot(depth_earth_3, bulk_D_earth_3, linewidth=2.0, label='Earth Model 3')
+ax24.plot(depth_earth_4, bulk_D_earth_4, linewidth=2.0, label='Earth Model 4')
+ax24.plot(depth_earth_5, bulk_D_earth_5, linewidth=2.0, label='Earth Model 5')
+ax24.plot(depth_earth_6, bulk_D_earth_6, linewidth=2.0, label='Earth Model 6')
+ax24.plot(depth_earth_7, bulk_D_earth_7, linewidth=2.0, label='Earth Model 7')
+ax24.plot(depth_earth_8, bulk_D_earth_8, linewidth=2.0, label='Earth Model 8')
+ax24.axhline(40, linewidth=2.0, linestyle="--", color='red', label='Observed Earth Bulk log(D)')
+ax23.set_title("Bulk log(D) For Modeled Vesta")
+ax23.set_xlabel("Depth (km)")
+ax23.set_ylabel("Bulk log(D)")
+ax24.set_title("Bulk log(D) For Modeled Earth")
+ax24.set_xlabel("Depth (km)")
+ax24.set_ylabel("Bulk log(D)")
+ax23.set_yscale('log')
+ax24.set_yscale('log')
+ax23.grid()
+ax24.grid()
+ax23.legend(loc='lower right')
+ax24.legend(loc='lower right')
+
+fig25 = plt.figure()
+ax25 = fig25.add_subplot(111)
+ax25.plot(depth_earth_1[2:], bulk_D_earth_1[2:], linewidth=2.0, label='Earth Model 1')
+ax25.plot(depth_earth_2[2:], bulk_D_earth_2[2:], linewidth=2.0, label='Earth Model 2')
+ax25.plot(depth_earth_3[2:], bulk_D_earth_3[2:], linewidth=2.0, label='Earth Model 3')
+ax25.plot(depth_earth_4[2:], bulk_D_earth_4[2:], linewidth=2.0, label='Earth Model 4')
+ax25.plot(depth_earth_5[2:], bulk_D_earth_5[2:], linewidth=2.0, label='Earth Model 5')
+ax25.plot(depth_earth_6[2:], bulk_D_earth_6[2:], linewidth=2.0, label='Earth Model 6')
+ax25.plot(depth_earth_7[2:], bulk_D_earth_7[2:], linewidth=2.0, label='Earth Model 7')
+ax25.plot(depth_earth_8[2:], bulk_D_earth_8[2:], linewidth=2.0, label='Earth Model 8')
+ax25.axhline(40, linewidth=2.0, linestyle="--", color='red', label='Observed Earth Bulk log D')
+ax25.set_title("Bulk D For Modeled Earth w/o Initial Disequilibrium")
+ax25.set_xlabel("Depth (km)")
+ax25.set_ylabel("Bulk D)")
+ax25.grid()
+ax25.legend(loc='lower right')
+
+fig26 = plt.figure()
+ax26 = fig26.add_subplot(111)
+ax26.plot(depth_earth_1[2:], bulk_D_earth_1[2:], linewidth=2.0, label='Earth Model 1')
+ax26.plot(depth_earth_2[2:], bulk_D_earth_2[2:], linewidth=2.0, label='Earth Model 2')
+ax26.plot(depth_earth_3[2:], bulk_D_earth_3[2:], linewidth=2.0, label='Earth Model 3')
+ax26.plot(depth_earth_4[2:], bulk_D_earth_4[2:], linewidth=2.0, label='Earth Model 4')
+ax26.plot(depth_earth_5[2:], bulk_D_earth_5[2:], linewidth=2.0, label='Earth Model 5')
+ax26.plot(depth_earth_6[2:], bulk_D_earth_6[2:], linewidth=2.0, label='Earth Model 6')
+ax26.plot(depth_earth_7[2:], bulk_D_earth_7[2:], linewidth=2.0, label='Earth Model 7')
+ax26.plot(depth_earth_8[2:], bulk_D_earth_8[2:], linewidth=2.0, label='Earth Model 8')
+ax26.axhline(40, linewidth=2.0, linestyle="--", color='red', label='Observed Earth Bulk log(D)')
+ax26.set_title("Bulk log(D) For Modeled Earth w/o Initial Disequilibrium")
+ax26.set_xlabel("Depth (km)")
+ax26.set_ylabel("Bulk log(D)")
+ax26.set_yscale('log')
+ax26.grid()
+ax26.legend(loc='lower right')
+
+
+
 
 
 plt.show()
