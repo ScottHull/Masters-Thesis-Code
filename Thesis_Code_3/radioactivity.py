@@ -28,8 +28,6 @@ def avg_vals_time(list_of_lists):
     return avgs
 
 
-
-
 hf_half_life = 8.9 * 10**6
 al_half_life = 7.17 * 10**5
 fe_half_life = 3.0 * 10**5
