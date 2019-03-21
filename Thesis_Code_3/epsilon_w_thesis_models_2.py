@@ -9,6 +9,26 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 plt.rcParams.update({'font.size': 14})
 
 
+def calcBulkIsotope(half_life, D, initial_time, timestep, hf_182_mantle_at_time, w_182_mantle_at_time,
+                    w_182_mantle_present):
+    decay_const = log(0.5) / half_life
+    w_182_add_post_core_formation = w_182_mantle_present - w_182_mantle_at_time
+    current_time = initial_time
+    hf_182_mantle = [hf_182_mantle_at_time]
+    w_182_mantle = [w_182_mantle_at_time]
+    w_182_core = [D * w_182_mantle_at_time]
+    while 0 < current_time <= initial_time:
+        hf_182_mantle_now = hf_182_mantle[-1] / exp(timestep * decay_const)
+        w_182_mantle_now = w_182_mantle[-1] * exp(timestep * decay_const)
+        w_182_core_now = D * w_182_mantle_now
+        hf_182_mantle.append(hf_182_mantle_now)
+        w_182_mantle.append(w_182_mantle_now)
+        w_182_core.append(w_182_core_now)
+        current_time -= timestep
+    bulk_hf_182 = hf_182_mantle_at_time + w_182_mantle_at_time + sum(w_182_core)
+    return hf_182_mantle, w_182_mantle, w_182_core, bulk_hf_182
+
+
 def decay(half_life, curr_nuclii, max_time, timestep, current_time, original_nuclii, rad_list):
     decay_const = log(0.5) / half_life
     if current_time < max_time:
@@ -137,58 +157,27 @@ for index, i in enumerate(samples):
     w_182_decays_temp = [(hf_182_decays[index][0] - j) for j in hf_182_decays[index]]
     w_182_decays.append(w_182_decays_temp)
 
-droplet_radius = 0.0185
-earth_droplet_radius = 0.002957762
-diff_length = calcDiffusionLength(chem_diffusivity=10**-8, settling_velocity=0.2580697580112788, droplet_radius=droplet_radius)
-earth_diff_length = calcDiffusionLength(chem_diffusivity=10**-8, settling_velocity=0.646064514, droplet_radius=earth_droplet_radius)
-vesta_z_eq_1_thru_4 = 240
-vesta_z_eq_5_thru_8 = 600
-vesta_vol_mesh_1_thru_4 = ((2 * (droplet_radius + diff_length))**2) * vesta_z_eq_1_thru_4
-vesta_vol_mesh_5_thru_8 = ((2 * (droplet_radius + diff_length))**2) * vesta_z_eq_5_thru_8
-earth_z_eq_1_thru_4 = 25
-earth_z_eq_5_thru_8 = 65
-earth_vol_mesh_1_thru_4 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_1_thru_4
-earth_vol_mesh_5_thru_8 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_5_thru_8
 
-
-vesta_1 = pd.read_csv("thesis_model_outputs/Vesta_1.csv")
-vesta_2 = pd.read_csv("thesis_model_outputs/Vesta_2.csv")
-vesta_3 = pd.read_csv("thesis_model_outputs/Vesta_3.csv")
-vesta_4 = pd.read_csv("thesis_model_outputs/Vesta_4.csv")
-vesta_5 = pd.read_csv("thesis_model_outputs/Vesta_5.csv")
-vesta_6 = pd.read_csv("thesis_model_outputs/Vesta_6.csv")
-vesta_7 = pd.read_csv("thesis_model_outputs/Vesta_7.csv")
-vesta_8 = pd.read_csv("thesis_model_outputs/Vesta_8.csv")
-
-depth_vesta_1 = [i / 1000 for i in [0] + list(vesta_1['z-depth'])]
-depth_vesta_2 = [i / 1000 for i in [0] + list(vesta_2['z-depth'])]
-depth_vesta_3 = [i / 1000 for i in [0] + list(vesta_3['z-depth'])]
-depth_vesta_4 = [i / 1000 for i in [0] + list(vesta_4['z-depth'])]
-depth_vesta_5 = [i / 1000 for i in [0] + list(vesta_5['z-depth'])]
-depth_vesta_6 = [i / 1000 for i in [0] + list(vesta_6['z-depth'])]
-depth_vesta_7 = [i / 1000 for i in [0] + list(vesta_7['z-depth'])]
-depth_vesta_8 = [i / 1000 for i in [0] + list(vesta_8['z-depth'])]
-
-concs_mesh_vesta_1, concs_objs_vesta_1, moles_mesh_vesta_1, moles_objs_vesta_1, verify_D_vesta_1 = recalcConcentration(predicted_d=vesta_1['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_2, concs_objs_vesta_2, moles_mesh_vesta_2, moles_objs_vesta_2, verify_D_vesta_2 = recalcConcentration(predicted_d=vesta_2['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_3, concs_objs_vesta_3, moles_mesh_vesta_3, moles_objs_vesta_3, verify_D_vesta_3 = recalcConcentration(predicted_d=vesta_3['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_4, concs_objs_vesta_4, moles_mesh_vesta_4, moles_objs_vesta_4, verify_D_vesta_4 = recalcConcentration(predicted_d=vesta_4['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_5, concs_objs_vesta_5, moles_mesh_vesta_5, moles_objs_vesta_5, verify_D_vesta_5 = recalcConcentration(predicted_d=vesta_5['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-concs_mesh_vesta_6, concs_objs_vesta_6, moles_mesh_vesta_6, moles_objs_vesta_6, verify_D_vesta_6 = recalcConcentration(predicted_d=vesta_6['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-concs_mesh_vesta_7, concs_objs_vesta_7, moles_mesh_vesta_7, moles_objs_vesta_7, verify_D_vesta_7 = recalcConcentration(predicted_d=vesta_7['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-concs_mesh_vesta_8, concs_objs_vesta_8, moles_mesh_vesta_8, moles_objs_vesta_8, verify_D_vesta_8 = recalcConcentration(predicted_d=vesta_8['D'],
-                              original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-
-
+hf_182_mantles = []
+w_182_mantles = []
+w_182_cores = []
+bulk_hf_182s = []
 
 for index, i in enumerate(samples):
     w_182_at_5my = w_182_decays[index][my_5_index]
     hf_182_at_5my = hf_182_decays[index][my_5_index]
-    print(i, w_182_at_5my, hf_182_at_5my, w_182_sample[index] - w_182_at_5my)
+    print(i, w_182_at_5my, hf_182_at_5my, w_182_decays[index][-1] - w_182_at_5my)
+
+    hf_182_mantle, w_182_mantle, w_182_core, bulk_hf_182 = calcBulkIsotope(half_life=hf_half_life, D=100,
+                   initial_time=(5 * 10**6), timestep=timestep, hf_182_mantle_at_time=hf_182_decays[index][my_5_index],
+                   w_182_mantle_at_time=w_182_decays[index][my_5_index],
+                   w_182_mantle_present=w_initial_ppb_sample[index])
+    hf_182_mantles.append(hf_182_mantle)
+    w_182_mantles.append(w_182_mantle)
+    w_182_cores.append(w_182_core)
+    bulk_hf_182s.append(bulk_hf_182)
+
+
+
+
+
