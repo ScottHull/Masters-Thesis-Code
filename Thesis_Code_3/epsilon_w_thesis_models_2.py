@@ -192,10 +192,10 @@ for index, i in enumerate(samples):
 
 fig1 = plt.figure()
 fig2 = plt.figure()
-fig3 = plt.figure()
+# fig3 = plt.figure()
 ax1 = fig1.add_subplot(111)
 ax2 = fig2.add_subplot(111)
-ax3 = fig3.add_subplot(111)
+# ax3 = fig3.add_subplot(111)
 for index, i in enumerate(samples):
     terrestrial_standard = terrestrial_standards[index]
     w_184 = w_184_sample[index]
@@ -207,7 +207,7 @@ for index, i in enumerate(samples):
     epsilon_182W_core_temp = [(j / w_184) / terrestrial_standard for j in w_182_core]
     ax1.plot(time_list[0:my_5_index + 1], epsilon_182W_mantle_temp, linewidth=2.0, label=i)
     ax2.plot(time_list[0:my_5_index + 1], epsilon_182W_core_temp, linewidth=2.0, label=i)
-    ax3.plot(time_list[0: my_5_index + 1], bulk_hf_182, linewidth=2.0, label=i)
+    # ax3.plot(time_list[0: my_5_index + 1], bulk_hf_182, linewidth=2.0, label=i)
 ax1.set_xlabel("Time (Ma)")
 ax1.set_ylabel("$\epsilon^{182}$W")
 ax1.set_title("$\epsilon^{182}$W in Vestian Mantle with Time")
@@ -218,11 +218,11 @@ ax2.set_ylabel("$\epsilon^{182}$W")
 ax2.set_title("$\epsilon^{182}$W in Vestian Core with Time")
 ax2.grid()
 ax2.legend(loc='upper right')
-ax3.set_xlabel("Time (Ma)")
-ax3.set_ylabel("$\^{182}$Hf (ppb)")
-ax3.set_title("$^{182}$Hf$_{bulk}$ in Vesta with Time")
-ax3.grid()
-ax3.legend(loc='upper right')
+# ax3.set_xlabel("Time (Ma)")
+# ax3.set_ylabel("$\^{182}$Hf (ppb)")
+# ax3.set_title("$^{182}$Hf$_{bulk}$ in Vesta with Time")
+# ax3.grid()
+# ax3.legend(loc='upper right')
 
 
 plt.show()
