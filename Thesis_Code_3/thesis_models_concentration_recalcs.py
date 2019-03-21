@@ -6,6 +6,8 @@ from math import log, exp, pi, sqrt, log10
 import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from decimal import Decimal
+import bisect
+
 plt.rcParams.update({'font.size': 16})
 
 
@@ -606,7 +608,8 @@ ax26.grid()
 ax26.legend(loc='lower right')
 
 
+intersection = bisect.bisect_left(bulk_D_earth_6, 40)
+print(intersection)
 
 
-
-plt.show()
+# plt.show()

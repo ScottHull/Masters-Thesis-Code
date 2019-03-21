@@ -28,7 +28,8 @@ def turbulentVelocity(gravity, droplet_radius, density_droplet, density_melt, Cd
     return v
 
 etas = [10**-3.5, 10**-1.0]
-radii = list(np.arange(0.001, 0.02 + 0.001, 0.001))
+# radii = list(np.arange(0.001, 0.02 + 0.001, 0.001))
+radii = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
 gravity_vesta = 0.25
 gravity_earth = 9.8
 density_droplet = 7800
@@ -65,16 +66,17 @@ for eta in etas:
 
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(111)
-ax1.plot([i * 100 for i in radii], z_eqs_vesta[0], linewidth=2.0, color='blue', label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-3.5}$)")
-ax1.plot([i * 100 for i in radii], z_eqs_earth[0], linewidth=2.0, color='red', label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-3.5}$)")
-ax1.plot([i * 100 for i in radii], z_eqs_vesta[1], linewidth=2.0, color='blue', linestyle="--", label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-1.0}$)")
-ax1.plot([i * 100 for i in radii], z_eqs_earth[1], linewidth=2.0, color='red', linestyle="--", label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-1.0}$)")
-ax1.set_xlabel("Droplet Radius (cm)")
+ax1.plot([i for i in radii], z_eqs_vesta[0], linewidth=2.0, color='blue', label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-3.5}$)")
+ax1.plot([i for i in radii], z_eqs_earth[0], linewidth=2.0, color='red', label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-3.5}$)")
+ax1.plot([i for i in radii], z_eqs_vesta[1], linewidth=2.0, color='blue', linestyle="--", label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-1.0}$)")
+ax1.plot([i for i in radii], z_eqs_earth[1], linewidth=2.0, color='red', linestyle="--", label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-1.0}$)")
+ax1.set_xlabel("Droplet Radius (m)")
 ax1.set_ylabel("z$_{eq}$ (m)")
 ax1.set_title("Droplet Radius vs. 99% Chemical Equilibration Distance")
 ax1.grid()
 ax1.legend(loc='upper left')
-
+ax1.set_yscale('log')
+ax1.set_xscale('log')
 
 plt.show()
 

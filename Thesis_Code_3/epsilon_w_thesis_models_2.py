@@ -98,8 +98,11 @@ my_5_index = time_list.index(5)
 eucrite_df = pd.read_excel("eucrites_kleine_2002.xlsx")
 
 samples = []
-decays = []
+hf_182_decays = []
 w_184_sample = []
+w_183_sample = []
+w_182_sample = []
+w_initial_ppb_sample = []
 epsilon_w = []
 terrestrial_standards = []
 
@@ -121,56 +124,18 @@ for row in eucrite_df.index:
                         original_nuclii=w_182, current_time=0, rad_list=[w_182])
 
     samples.append(sample)
-    decays.append(decay_hf_182)
+    hf_182_decays.append(decay_hf_182)
     terrestrial_standards.append(terrestrial_standard)
     w_184_sample.append(w_184)
+    w_183_sample.append(w_183)
+    w_182_sample.append(w_182)
+    w_initial_ppb_sample.append(w_ppb)
     epsilon_w.append(epsilon_w_final)
 
-
-fig1 = plt.figure()
-ax1 = fig1.add_subplot(111)
+w_182_decays = []
 for index, i in enumerate(samples):
-    if i == "Average":
-        ax1.plot(time_list, decays[index], linewidth=3.0, color="black", linestyle="--", label=i)
-    else:
-        ax1.plot(time_list, decays[index], linewidth=2.0, label=i)
-ax1.axvspan(0, 5, alpha=0.2, color='red', label='Vesta Core Formation Period')
-ax1.set_xlabel("Time (Ma)")
-ax1.set_ylabel("$^{182}$Hf (ppb)")
-ax1.set_title("$^{182}$Hf Over Time in Eucrites")
-ax1.grid()
-ax1.legend(loc='upper right')
-
-fig2 = plt.figure()
-ax2 = fig2.add_subplot(111)
-for index, i in enumerate(samples):
-    if i == "Average":
-        ax2.plot(time_list, [decays[index][0] - j for j in decays[index]], linewidth=3.0, color="black", linestyle="--", label=i)
-    else:
-        ax2.plot(time_list, [decays[index][0] - j for j in decays[index]], linewidth=2.0, label=i)
-ax2.axvspan(0, 5, alpha=0.2, color='red', label='Vesta Core Formation Period')
-ax2.set_xlabel("Time (Ma)")
-ax2.set_ylabel("$^{182}$W (ppb)")
-ax2.set_title("$^{182}$W Over Time in Eucrites")
-ax2.grid()
-ax2.legend(loc='upper left')
-
-fig3 = plt.figure()
-ax3 = fig3.add_subplot(111)
-for index, i in enumerate(samples):
-    w_184 = w_184_sample[index]
-    if i == "Average":
-        ax3.plot(time_list, [(decays[index][0] - j) / w_184 for j in decays[index]], linewidth=3.0, color="black", linestyle="--", label=i)
-    else:
-        ax3.plot(time_list, [(decays[index][0] - j) / w_184 for j in decays[index]], linewidth=2.0, label=i)
-ax3.axvspan(0, 5, alpha=0.2, color='red', label='Vesta Core Formation Period')
-ax3.set_xlabel("Time (Ma)")
-ax3.set_ylabel("$^{182}$W/$^{184}$W")
-ax3.set_title("$^{182}$W/$^{184}$W Over Time in Eucrites")
-ax3.grid()
-ax3.legend(loc='lower right')
-
-
+    w_182_decays_temp = [(hf_182_decays[index][0] - j) for j in hf_182_decays[index]]
+    w_182_decays.append(w_182_decays_temp)
 
 droplet_radius = 0.0185
 earth_droplet_radius = 0.002957762
@@ -221,91 +186,9 @@ concs_mesh_vesta_7, concs_objs_vesta_7, moles_mesh_vesta_7, moles_objs_vesta_7, 
 concs_mesh_vesta_8, concs_objs_vesta_8, moles_mesh_vesta_8, moles_objs_vesta_8, verify_D_vesta_8 = recalcConcentration(predicted_d=vesta_8['D'],
                               original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
 
-bulk_D_vesta_1 = forIterReverseD(cell_concs=concs_mesh_vesta_1, obj_concs=concs_objs_vesta_1,
-                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
-bulk_D_vesta_2 = forIterReverseD(cell_concs=concs_mesh_vesta_2, obj_concs=concs_objs_vesta_2,
-                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
-bulk_D_vesta_3 = forIterReverseD(cell_concs=concs_mesh_vesta_3, obj_concs=concs_objs_vesta_3,
-                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
-bulk_D_vesta_4 = forIterReverseD(cell_concs=concs_mesh_vesta_4, obj_concs=concs_objs_vesta_4,
-                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_1_thru_4, radius_droplet=droplet_radius)
-bulk_D_vesta_5 = forIterReverseD(cell_concs=concs_mesh_vesta_5, obj_concs=concs_objs_vesta_5,
-                                 initial_moles_obj=0, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius)
-bulk_D_vesta_6 = forIterReverseD(cell_concs=concs_mesh_vesta_6, obj_concs=concs_objs_vesta_6, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius, initial_moles_obj=0)
-bulk_D_vesta_7 = forIterReverseD(cell_concs=concs_mesh_vesta_7, obj_concs=concs_objs_vesta_7, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius, initial_moles_obj=0)
-bulk_D_vesta_8 = forIterReverseD(cell_concs=concs_mesh_vesta_8, obj_concs=concs_objs_vesta_8, initial_moles_mesh=0.27950089725326804,
-                                 volume_mesh=vesta_vol_mesh_5_thru_8, radius_droplet=droplet_radius, initial_moles_obj=0)
 
 
-
-fig4 = plt.figure()
-ax4 = fig4.add_subplot(111)
 for index, i in enumerate(samples):
-    w_184 = w_184_sample[index]
-    if i == "Average":
-        ax4.plot(time_list, [k * bulk_D_vesta_1[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 1")
-        ax4.plot(time_list, [k * bulk_D_vesta_2[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 2")
-        ax4.plot(time_list, [k * bulk_D_vesta_3[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 3")
-        ax4.plot(time_list, [k * bulk_D_vesta_4[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 4")
-        ax4.plot(time_list, [k * bulk_D_vesta_5[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 5")
-        ax4.plot(time_list, [k * bulk_D_vesta_6[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 6")
-        ax4.plot(time_list, [k * bulk_D_vesta_7[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 7")
-        ax4.plot(time_list, [k * bulk_D_vesta_8[-1] / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 8")
-ax4.axhline(epsilon_w[-1], 0, 1, linewidth=2.0, color='red', linestyle="--", label="Average Observed $\epsilon$$^{182}$W in Vesga")
-ax4.axvspan(0, 5, alpha=0.2, color='red', label='Vesta Core Formation Period')
-ax4.set_xlabel("Time (My)")
-ax4.set_ylabel("$\epsilon$$^{182}$W")
-ax4.set_title("$\epsilon$$^{182}$W in Vesta's Core")
-ax4.grid()
-ax4.legend(loc='upper right')
-
-
-fig5 = plt.figure()
-ax5 = fig5.add_subplot(111)
-for index, i in enumerate(samples):
-    w_184 = w_184_sample[index]
-    if i == "Average":
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_1[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 1")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_2[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 2")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_3[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 3")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_4[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 4")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_5[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 5")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_6[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 6")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_7[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 7")
-        ax5.plot(time_list, [k - (k * bulk_D_vesta_8[-1]) / terrestrial_standards[-1] for k in [(decays[index][0] - j) / w_184 for j in decays[index]]],
-                 linewidth=2.0, label="Vesta Model 8")
-ax5.axhline(epsilon_w[-1], 0, 1, linewidth=2.0, color='red', linestyle="--", label="Average Observed $\epsilon$$^{182}$W in Eucrites")
-ax5.axvspan(0, 5, alpha=0.2, color='red', label='Vesta Core Formation Period')
-ax5.set_xlabel("Time (My)")
-ax5.set_ylabel("$\epsilon$$^{182}$W")
-ax5.set_title("$\epsilon$$^{182}$W in Vesta's Mantle")
-ax5.grid()
-ax5.legend(loc='upper right')
-
-
-
-plt.show()
-
-
+    w_182_at_5my = w_182_decays[index][my_5_index]
+    hf_182_at_5my = hf_182_decays[index][my_5_index]
+    print(i, w_182_at_5my, hf_182_at_5my, w_182_sample[index] - w_182_at_5my)
