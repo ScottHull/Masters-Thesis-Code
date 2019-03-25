@@ -187,8 +187,8 @@ for index, i in enumerate(samples):
     w_182_mantle = w_182_mantles[index]
     w_182_core = w_182_cores[index]
     bulk_hf_182 = bulk_hf_182s[index]
-    epsilon_182W_mantle_temp = [(j / w_184) / terrestrial_standard for j in w_182_mantle]
-    epsilon_182W_core_temp = [(j / w_184) / terrestrial_standard for j in w_182_core]
+    epsilon_182W_mantle_temp = [(((j / w_184) / terrestrial_standard) - 1) * 10**4 for j in w_182_mantle]
+    epsilon_182W_core_temp = [(((j / w_184) / terrestrial_standard) - 1) * 10**4 for j in w_182_core]
 
 fig1 = plt.figure()
 fig2 = plt.figure()
@@ -203,8 +203,8 @@ for index, i in enumerate(samples):
     w_182_mantle = w_182_mantles[index]
     w_182_core = w_182_cores[index]
     bulk_hf_182 = bulk_hf_182s[index]
-    epsilon_182W_mantle_temp = [(j / w_184) / terrestrial_standard for j in w_182_mantle]
-    epsilon_182W_core_temp = [(j / w_184) / terrestrial_standard for j in w_182_core]
+    epsilon_182W_mantle_temp = [(((j / w_184) / terrestrial_standard) - 1) * 10**4 for j in w_182_mantle]
+    epsilon_182W_core_temp = [(((j / w_184) / terrestrial_standard) - 1) * 10**4 for j in w_182_core]
     ax1.plot(time_list[0:my_5_index + 1], epsilon_182W_mantle_temp, linewidth=2.0, label=i)
     ax2.plot(time_list[0:my_5_index + 1], epsilon_182W_core_temp, linewidth=2.0, label=i)
     # ax3.plot(time_list[0: my_5_index + 1], bulk_hf_182, linewidth=2.0, label=i)
