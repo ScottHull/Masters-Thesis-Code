@@ -9,9 +9,9 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 
 
-def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_half_life, initial_hf182_conc, mass_vesta,
-              core_frac_per_timestep, mass_vesta_core, partition_coeff):
+def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_half_life, initial_hf182_conc, mass_vesta, mass_vesta_core, partition_coeff):
 
+    core_frac_per_timestep = core_formation_max_time / timestep
     decay_const = log(0.5) / hf182_half_life
 
     fraction_core_accumulated = [0]
@@ -38,7 +38,7 @@ def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_hal
 
     max_modeling_time_range = list(np.arange(0, inf_time + timestep, timestep))
 
-    for time_index, time in max_modeling_time_range:
+    for time_index, time in enumerate(max_modeling_time_range):
         if not time_index == 0:
 
             fraction_core_bulk = fraction_core_accumulated[-1] + core_frac_per_timestep
@@ -108,8 +108,47 @@ def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_hal
 
 
 
-def decayW184():
-    pass
+def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max_time, inf_time, timestep, partition_coeff):
+
+    core_frac_per_timestep = core_formation_max_time / timestep
+    bulk_mass_w184 = (initial_conc_w184 * (10**-9)) * mass_vesta
+    bulk_conc_w184 = (bulk_mass_w184 / mass_vesta) * (10**9)
+
+    fraction_core_accumulated = [0]
+    core_mass_added = [0]
+    mantle_mass_depleted = [0]
+    mass_core = [0]
+    mantle_mass = [mass_vesta]
+
+    core_mass_w184_added = []
+    current_mantle_mass_w184 = []
+
+    max_modeling_time_range = list(np.arange(0, inf_time + timestep, timestep))
+
+    for time_index, time in enumerate(max_modeling_time_range):
+        if not time_index == 0:
+
+            fraction_core_bulk = fraction_core_accumulated[-1] + core_frac_per_timestep
+            mass_core_at_time = fraction_core_bulk * mass_vesta_core
+            mass_core_added_at_time = mass_core_at_time - mass_core[-1]
+            mass_mantle_at_time = mass_vesta - mass_core_at_time
+            mass_mantle_depleted_at_time = mantle_mass[-1] - mass_mantle_at_time
+
+            fraction_core_accumulated.append(fraction_core_bulk)
+            core_mass_added.append(mass_core_added_at_time)
+            mantle_mass.append(mass_mantle_at_time)
+            mantle_mass_depleted.append(mass_mantle_depleted_at_time)
+
+            mantle_conc_w184_at_time = bulk_conc_w184 / (partition_coeff + 1)
+            core_conc_w184_at_time = bulk_conc_w184 - mantle_conc_w184_at_time
+            core_mass_w184_added_at_time = (core_conc_w184_at_time * (10**-9)) * mass_core_added_at_time
+            mantle_mass_w184_added_at_time = current_mantle_mass_w184[-1] - core_mass_w184_added_at_time
+            bulk_core_mass_w184_at_time = sum(core_mass_w184_added)
+            bulk_mass_w184_check = mantle_mass_w184_added_at_time + bulk_core_mass_w184_at_time
+
+
+
+
 
 
 
