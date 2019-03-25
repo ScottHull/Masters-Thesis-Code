@@ -114,6 +114,7 @@ max_time = 100 * (10**6)
 timestep = 1 * (10**6)
 time_list = [i / (1 * 10**6) for i in np.arange(0, max_time + timestep, timestep)]
 my_5_index = time_list.index(5)
+w_atomic_mass = 183.84
 
 eucrite_df = pd.read_excel("eucrites_kleine_2002.xlsx")
 
@@ -224,6 +225,28 @@ ax2.legend(loc='upper right')
 # ax3.grid()
 # ax3.legend(loc='upper right')
 
+
+fig4 = plt.figure()
+ax4_0 = fig4.add_subplot(111)
+ax4_1 = fig4.add_subplot(211)
+ax4_2 = fig4.add_subplot(212)
+for index, i in enumerate(samples):
+    w_182_mantle = w_182_mantles[index]
+    w_182_core = w_182_cores[index]
+    ax4_1.plot(time_list[0:my_5_index + 1], [j * w_atomic_mass for j in w_182_mantle], linewidth=2.0, label=i)
+    ax4_2.plot(time_list[0:my_5_index + 1], [j * w_atomic_mass for j in w_182_core], linewidth=2.0, label=i)
+ax4_0.spines['top'].set_color('none')
+ax4_0.spines['bottom'].set_color('none')
+ax4_0.spines['left'].set_color('none')
+ax4_0.spines['right'].set_color('none')
+ax4_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax4_0.xaxis.labelpad = 20
+ax4_0.yaxis.labelpad = 20
+ax4_0.set_xlabel("Time (Ma)")
+ax4_0.set_ylabel("Mass W (g)")
+ax4_0.set_title("182W Mass for Vestian Core & Mantle")
+ax4_1.grid()
+ax4_2.grid()
 
 plt.show()
 

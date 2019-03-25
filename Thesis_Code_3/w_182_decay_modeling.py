@@ -70,14 +70,53 @@ def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_hal
             if time <= core_formation_max_time:
                 core_conc_w182_at_time_added = bulk_conc_w182_at_time_added - mantle_conc_182w_at_time_added
                 core_mass_w182_at_time_added = (core_conc_w182_at_time_added * (10**-9)) * mass_core_added_at_time
-                mass_mantle_w182_added = bulk_mass_w182_at_time_added - core_mass_w182_at_time_added
+                mass_mantle_w182_at_time_added = bulk_mass_w182_at_time_added - core_mass_w182_at_time_added
 
+                core_conc_182w_added.append(core_conc_w182_at_time_added)
+                core_mass_182w_added.append(core_mass_w182_at_time_added)
+                mantle_mass_182w_added.append(mass_mantle_w182_at_time_added)
 
 
             else:
                 core_conc_w182_at_time_added = 0
                 core_mass_w182_at_time_added = 0
-                mass_mantle_w182_added = bulk_mass_w182_at_time_added - core_mass_w182_at_time_added
+                mass_mantle_w182_at_time_added = bulk_mass_w182_at_time_added - core_mass_w182_at_time_added
+
+                core_conc_182w_added.append(core_conc_w182_at_time_added)
+                core_mass_182w_added.append(core_mass_w182_at_time_added)
+                mantle_mass_182w_added.append(mass_mantle_w182_at_time_added)
+
+
+            mantle_bulk_mass_182w_at_time = sum(mantle_mass_182w_added)
+            core_bulk_mass_182w_at_time = sum(core_mass_w182_at_time_added)
+            mantle_bulk_conc_182w_at_time = (mantle_bulk_mass_182w_at_time / mass_mantle_at_time) * (10**9)
+            core_bulk_conc_182w_at_time = (core_bulk_mass_182w_at_time / mass_core_at_time) * (10**9)
+
+            bulk_core_mass_182w.append(core_bulk_mass_182w_at_time)
+            bulk_mantle_mass_182w.append(mantle_bulk_mass_182w_at_time)
+            bulk_mass_182w_check.append(mantle_bulk_mass_182w_at_time + core_bulk_mass_182w_at_time)
+            mantle_bulk_conc_182w.append(mantle_bulk_conc_182w_at_time)
+            core_bulk_conc_182w.append(core_bulk_conc_182w_at_time)
+
+
+    return fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
+           bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
+           core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
+           bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w
+
+
+
+
+
+def decayW184():
+    pass
+
+
+
+
+
+
+
 
 
 
