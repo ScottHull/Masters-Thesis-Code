@@ -147,25 +147,25 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
             mantle_conc_w184_at_time = bulk_conc_w184 / (partition_coeff + 1)
             core_conc_w184_at_time = bulk_conc_w184 - mantle_conc_w184_at_time
             core_mass_w184_added_at_time = (core_conc_w184_at_time * (10**-9)) * mass_core_added_at_time
-            mantle_mass_w184_added_at_time = current_mantle_mass_w184[-1] - core_mass_w184_added_at_time
+            mantle_mass_w184_remaining_at_time = current_mantle_mass_w184[-1] - core_mass_w184_added_at_time
             bulk_core_mass_w184_at_time = sum(core_mass_w184_added)
-            bulk_mass_w184_check_at_time = mantle_mass_w184_added_at_time + bulk_core_mass_w184_at_time
+            bulk_mass_w184_check_at_time = mantle_mass_w184_remaining_at_time + bulk_core_mass_w184_at_time
             core_bulk_conc_w184_at_time = (bulk_core_mass_w184_at_time / mass_vesta) * (10**9)
-            mantle_bulk_conc_184w
+            mantle_bulk_conc_184w_at_time = (mantle_mass_w184_remaining_at_time / mass_mantle_at_time) * (10**9)
 
             core_mass_w184_added.append(core_mass_w184_added_at_time)
             core_mass_w184_at_time.append(bulk_core_mass_w184_at_time)
             mantle_mass_w184_at_time.append(mantle_mass_w184_at_time)
-            bulk_mass_w184_check.append(bulk_core_mass_w184_at_time + mantle_mass_w184_added_at_time)
+            bulk_mass_w184_check.append(bulk_core_mass_w184_at_time + mantle_mass_w184_remaining_at_time)
+            core_bulk_conc_184.append(core_bulk_conc_w184_at_time)
+            mantle_bulk_conc_184w.append(mantle_bulk_conc_184w_at_time)
 
 
 
 
-
-
-
-
-
+    return fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core,  mantle_mass, \
+           core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
+           bulk_mass_w184_check, core_bulk_conc_184, mantle_bulk_conc_184w
 
 
 
