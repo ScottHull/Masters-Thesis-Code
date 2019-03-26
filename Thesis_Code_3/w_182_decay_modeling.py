@@ -120,8 +120,13 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
     mass_core = [0]
     mantle_mass = [mass_vesta]
 
-    core_mass_w184_added = []
-    current_mantle_mass_w184 = []
+    core_mass_w184_added = [0]
+    current_mantle_mass_w184 = [bulk_mass_w184]
+    core_mass_w184_at_time = [0]
+    mantle_mass_w184_at_time = [bulk_mass_w184]
+    bulk_mass_w184_check = [bulk_mass_w184]
+    core_bulk_conc_184 = [0]
+    mantle_bulk_conc_184w = [initial_conc_w184]
 
     max_modeling_time_range = list(np.arange(0, inf_time + timestep, timestep))
 
@@ -144,8 +149,14 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
             core_mass_w184_added_at_time = (core_conc_w184_at_time * (10**-9)) * mass_core_added_at_time
             mantle_mass_w184_added_at_time = current_mantle_mass_w184[-1] - core_mass_w184_added_at_time
             bulk_core_mass_w184_at_time = sum(core_mass_w184_added)
-            bulk_mass_w184_check = mantle_mass_w184_added_at_time + bulk_core_mass_w184_at_time
+            bulk_mass_w184_check_at_time = mantle_mass_w184_added_at_time + bulk_core_mass_w184_at_time
+            core_bulk_conc_w184_at_time = (bulk_core_mass_w184_at_time / mass_vesta) * (10**9)
+            mantle_bulk_conc_184w
 
+            core_mass_w184_added.append(core_mass_w184_added_at_time)
+            core_mass_w184_at_time.append(bulk_core_mass_w184_at_time)
+            mantle_mass_w184_at_time.append(mantle_mass_w184_at_time)
+            bulk_mass_w184_check.append(bulk_core_mass_w184_at_time + mantle_mass_w184_added_at_time)
 
 
 
