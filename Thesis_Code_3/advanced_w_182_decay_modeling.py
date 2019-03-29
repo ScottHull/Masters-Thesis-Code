@@ -426,7 +426,6 @@ hf182_at_wt = 178.49
 initial_hf182_conc = 20.26
 mass_vesta = 2.59 * (10**20)
 mass_vesta_core = 4.662 * (10**19)
-partition_coeff = 100
 initial_conc_w184 = 24.068
 terrestrial_standard = 0.864900
 time_list = list(np.arange(0, inf_time + timestep, timestep))
