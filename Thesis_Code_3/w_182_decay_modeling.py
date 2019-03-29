@@ -270,6 +270,7 @@ mass_vesta = 2.59 * (10**20)
 mass_vesta_core = 4.662 * (10**19)
 partition_coeff = 100
 initial_conc_w184 = 24.068
+terrestrial_standard = 0.864900
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
 core_formation_max_time_index = time_list.index(core_formation_max_time)
@@ -359,8 +360,6 @@ fraction_core_accumulated2, core_mass_added2, mantle_mass_depleted2, mass_core2,
 #     )
 # )
 
-
-terrestrial_standard = 0.864900
 bulk_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
                           for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
 mantle_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
@@ -480,10 +479,26 @@ fig7 = plt.figure()
 ax7_0 = fig7.add_subplot(111)
 ax7_1 = fig7.add_subplot(211)
 ax7_2 = fig7.add_subplot(212)
-ax7_1.plot(time_list_ma, pct_mass_in_mantle_w182, linewidth=2.0, label='$^{182}$ in Mantle')
-ax7_1.plot(time_list_ma, pct_mass_in_core_w182, linewidth=2.0, label='$^{182}$ in Core')
-ax7_2.plot(time_list_ma, pct_mass_in_mantle_w182, linewidth=2.0, label='$^{182}$ in Mantle')
-ax7_2.plot(time_list_ma, pct_mass_in_core_w182, linewidth=2.0, label='$^{182}$ in Core')
+ax7_1.plot(time_list_ma, pct_mass_in_mantle_w182, linewidth=2.0, label='$^{182}$W in Mantle')
+ax7_1.plot(time_list_ma, pct_mass_in_core_w182, linewidth=2.0, label='$^{182}$W in Core')
+ax7_2.plot(time_list_ma, pct_mass_in_mantle_w184, linewidth=2.0, label='$^{184}$W in Mantle')
+ax7_2.plot(time_list_ma, pct_mass_in_core_w184, linewidth=2.0, label='$^{184}$W in Core')
+ax7_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax7_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax7_1.grid()
+ax7_2.grid()
+ax7_0.spines['top'].set_color('none')
+ax7_0.spines['bottom'].set_color('none')
+ax7_0.spines['left'].set_color('none')
+ax7_0.spines['right'].set_color('none')
+ax7_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax7_0.xaxis.labelpad = 20
+ax7_0.yaxis.labelpad = 20
+ax7_0.set_ylabel("Percent (%)")
+ax7_0.set_xlabel("Time (Ma)")
+ax7_0.set_title("$^{182}$W Mass Percent in Vesta Over Time (Relative to Infinite Time $^{182}$W)")
+ax7_1.legend(loc='lower right')
+ax7_2.legend(loc='lower right')
 
 
 
