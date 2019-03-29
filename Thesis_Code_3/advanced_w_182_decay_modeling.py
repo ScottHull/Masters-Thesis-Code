@@ -458,6 +458,8 @@ temperature_surf = 2000
 pressure_surf = 0
 radius_body = (263 * 1000)
 
+avg_eucrite_w182_w184_ratio = 0.866555125
+avg_eucrite_epsilon_w182 = 19.13660539
 
 
 
@@ -563,6 +565,9 @@ mantle_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, ter
 core_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
                           for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
 
+bulk_d_182w = [i / j for i, j in zip(bulk_core_mass_182w[1:], bulk_mantle_mass_182w[1:])]
+bulk_d_184w = [i / j for i, j in zip(core_mass_w184_at_time[1:], mantle_mass_w184_at_time[1:])]
+
 bulk_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mass_182w, bulk_mass_w184_at_time)]
 mantle_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mantle_mass_182w, mantle_mass_w184_at_time)]
 core_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_core_mass_182w[1:], core_mass_w184_at_time[1:])]
@@ -580,6 +585,7 @@ ax1 = fig1.add_subplot(111)
 ax1.plot(time_list_ma, bulk_epsilon_w182_vesta, linewidth=2.0, label='Bulk')
 ax1.plot(time_list_ma, mantle_epsilon_w182_vesta, linewidth=2.0, label='Mantle')
 ax1.plot(time_list_ma[1:], core_epsilon_w182_vesta, linewidth=2.0, label='Core')
+ax1.axhline(avg_eucrite_epsilon_w182, linestyle='--', color='red', label="Avg. Eucrite")
 ax1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax1.grid()
 ax1.set_title("$\epsilon^{182}$W on Vesta Through Time")
@@ -651,6 +657,7 @@ ax5_0 = fig5.add_subplot(111)
 ax5_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
 ax5_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
 ax5_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
+ax5_0.axhline(avg_eucrite_w182_w184_ratio, linestyle='--', color='red', label="Avg. Eucrite")
 ax5_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax5_0.set_title("$^{182}$W/$^{184}$W Concentrations On Vesta Over Time")
 ax5_0.set_xlabel("Time (Ma)")
@@ -726,18 +733,28 @@ ax9_1.set_title("Metal-Silicate Partitioning Coefficient (D) at Vesta CMB Over T
 ax9_1.set_xlabel("Time (Ma)")
 ax9_1.set_ylabel("D")
 
-fig9 = plt.figure()
-ax9_0 = fig9.add_subplot(111)
-ax9_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
-ax9_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
-ax9_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
-ax9_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax9_0.set_title("$^{182}$W/$^{184}$W Concentrations on Vesta Over Time")
-ax9_0.set_xlabel("Time (Ma)")
-ax9_0.set_ylabel("$^{182}$W/$^{184}$W")
-ax9_0.grid()
-ax9_0.legend(loc='lower right')
+# fig9 = plt.figure()
+# ax9_0 = fig9.add_subplot(111)
+# ax9_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
+# ax9_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
+# ax9_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
+# ax9_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax9_0.set_title("$^{182}$W/$^{184}$W Concentrations on Vesta Over Time")
+# ax9_0.set_xlabel("Time (Ma)")
+# ax9_0.set_ylabel("$^{182}$W/$^{184}$W")
+# ax9_0.grid()
+# ax9_0.legend(loc='lower right')
 
+fig10 = plt.figure()
+ax10 = fig10.add_subplot(111)
+ax10.plot(time_list_ma[1:], bulk_d_182w, linewidth=2.0, label="$^{182}$W")
+ax10.plot(time_list_ma[1:], bulk_d_184w, linewidth=2.0, label="$^{184}$W")
+ax10.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax10.set_title("Bulk Partition Coefficient (D) on Vesta Over Time")
+ax10.set_xlabel("Time (Ma)")
+ax10.set_ylabel("D")
+ax10.grid()
+ax10.legend(loc='upper left')
 
 
 plt.show()
