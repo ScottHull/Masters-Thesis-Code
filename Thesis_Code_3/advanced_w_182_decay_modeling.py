@@ -64,7 +64,7 @@ def partition(pressure, temperature, deltaIW):
     return D
 
 def calcEpsilon182W(w182_at_time, w184_at_time, terretrial_standard):
-    epsilon = (((w182_at_time / w184_at_time) / terretrial_standard) - 1)  * (10**4)
+    epsilon = (((w182_at_time / w184_at_time) / terretrial_standard) - 1) * (10**4)
     return epsilon
 
 
@@ -253,18 +253,27 @@ def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_hal
                 bulk_conc_182w.append(bulk_conc_182w_at_time)
                 bulk_mass_182w.append(bulk_mass_w182_at_time)
 
+    bulk_moles_182w_added_at_time = [i / w182_at_wt for i in bulk_mass_182w_added]
+    mantle_moles_182w_added_at_time = [i / w182_at_wt for i in mantle_mass_182w_added]
+    core_moles_182w_added_at_time = [i / w182_at_wt for i in core_mass_182w_added]
+    bulk_moles_182w = [i / w182_at_wt for i in bulk_mass_182w]
+    core_bulk_moles_182w = [i / w182_at_wt for i in bulk_core_mass_182w]
+    mantle_moles_182w = [i / w182_at_wt for i in bulk_mantle_mass_182w]
+
+
 
     return fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
            bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
            core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
            bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w, radius_mantle, \
-           radius_core, cmb_d, temperatures, pressures
+           radius_core, cmb_d, temperatures, pressures, bulk_moles_182w_added_at_time, mantle_moles_182w_added_at_time, \
+           core_moles_182w_added_at_time, bulk_moles_182w, core_bulk_moles_182w, mantle_moles_182w
 
 
 
 def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max_time, inf_time, timestep,
               density_metal, density_melt, fO2, temperature_surf, pressure_surf, radius_body, gravity,
-              thermal_expansivity, heat_capacity):
+              thermal_expansivity, heat_capacity, w184_at_wt):
 
     core_frac_per_timestep = timestep / core_formation_max_time
     bulk_mass_w184 = (initial_conc_w184 * (10**-9)) * mass_vesta
@@ -407,13 +416,21 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
                 bulk_conc_184w_at_time.append(bulk_conc_w184)
                 bulk_mass_w184_at_time.append(bulk_mass_w184)
 
+    bulk_moles_182w_added_at_time = [i / w182_at_wt for i in bulk_mass_182w_added]
+    mantle_moles_184w_remaining_at_time = [i / w184_at_wt for i in mantle_mass_w184_at_time]
+    core_moles_184w_added_at_time = [i / w184_at_wt for i in core_mass_w184_added]
+    bulk_moles_184w = [i / w184_at_wt for i in bulk_mass_w184_at_time]
+    core_bulk_moles_184w = [i / w184_at_wt for i in core_mass_w184_at_time]
+    mantle_moles_184w = [i / w184_at_wt for i in mantle_mass_w184_at_time]
 
 
 
     return fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core,  mantle_mass, \
            core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
            bulk_mass_w184_check, core_bulk_conc_184w, mantle_bulk_conc_184w, bulk_conc_184w_at_time, \
-           bulk_mass_w184_at_time, radius_mantle, radius_core, cmb_d, temperatures, pressures
+           bulk_mass_w184_at_time, radius_mantle, radius_core, cmb_d, temperatures, pressures, \
+           bulk_moles_182w_added_at_time, mantle_moles_184w_remaining_at_time, core_moles_184w_added_at_time, \
+           bulk_moles_184w, core_bulk_moles_184w, mantle_moles_184w
 
 
 
@@ -423,10 +440,10 @@ inf_time = 100 * (10**6)
 w182_at_wt = 183.84
 hf182_half_life = 8.9 * (10**6)
 hf182_at_wt = 178.49
-initial_hf182_conc = 20.26
 mass_vesta = 2.59 * (10**20)
 mass_vesta_core = 4.662 * (10**19)
-initial_conc_w184 = 24.068
+initial_hf182_conc = 16.613
+initial_conc_w184 = 24.101
 terrestrial_standard = 0.864900
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
@@ -436,7 +453,7 @@ density_melt = 3580
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-fO2 = -0.8
+fO2 = -2.25
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (263 * 1000)
@@ -449,7 +466,9 @@ fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, man
            bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
            core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
            bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w, radius_mantle, \
-            radius_core, cmb_d, temperatures, pressures = \
+            radius_core, cmb_d, temperatures, pressures, bulk_moles_182w_added_at_time, \
+            mantle_moles_182w_added_at_time, core_moles_182w_added_at_time, bulk_moles_182w, core_bulk_moles_182w, \
+            mantle_moles_182w = \
                 decayW182(timestep=timestep, core_formation_max_time=core_formation_max_time, inf_time=inf_time,
               w182_at_wt=w182_at_wt, hf182_half_life=hf182_half_life, hf182_at_wt=hf182_at_wt,
               initial_hf182_conc=initial_hf182_conc, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
@@ -457,55 +476,85 @@ fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, man
               pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
               thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity)
 
-# print(
-#     "Fraction Core Accumulated: {}\n"
-#     "Mass Core Added: {}\n"
-#     "Mass Core: {}\n"
-#     "Mantle Mass: {}\n"
-#     "Moles 182Hf: {}\n"
-#     "Bulk Mass 182W: {}\n"
-#     "Bulk Conc 182W: {}\n"
-#     "Bulk Mass 182W added: {}\n"
-#     "Bulk Conc 182W added: {}\n"
-#     "Mantle Conc 182W added: {}\n"
-#     "Core Conc 182W added: {}\n"
-#     "Core Mass 182W added: {}\n"
-#     "Mantle mass 182W added: {}\n"
-#     "Bulk Core Mass 182W: {}\n"
-#     "Bulk Mantle Mass 182W: {}\n"
-#     "Bulk Mass 182W check: {}\n"
-#     "Core Bulk Conc 182W: {}\n"
-#     "Mantle Bulk Conc 182W: {}\n".format(
-#     fraction_core_accumulated[core_formation_max_time_index],
-#     core_mass_added[core_formation_max_time_index],
-#     mass_core[core_formation_max_time_index],
-#     mantle_mass[core_formation_max_time_index],
-#     moles_182hf[core_formation_max_time_index],
-#     bulk_mass_182w[core_formation_max_time_index],
-#     bulk_conc_182w[core_formation_max_time_index],
-#     bulk_mass_182w_added[core_formation_max_time_index],
-#     bulk_conc_182w_added[core_formation_max_time_index],
-#     mantle_conc_182w_added[core_formation_max_time_index],
-#     core_conc_182w_added[core_formation_max_time_index],
-#     core_mass_182w_added[core_formation_max_time_index],
-#     mantle_mass_182w_added[core_formation_max_time_index],
-#     bulk_core_mass_182w[core_formation_max_time_index],
-#     bulk_mantle_mass_182w[core_formation_max_time_index],
-#     bulk_mass_182w_check[core_formation_max_time_index],
-#     core_bulk_conc_182w[core_formation_max_time_index],
-#     mantle_bulk_conc_182w[core_formation_max_time_index]
-#     )
-# )
+print(
+    "Fraction Core Accumulated: {}\n"
+    "Mass Core Added: {}\n"
+    "Mass Core: {}\n"
+    "Mantle Mass: {}\n"
+    "Moles 182Hf: {}\n"
+    "Bulk Mass 182W: {}\n"
+    "Bulk Conc 182W: {}\n"
+    "Bulk Mass 182W added: {}\n"
+    "Bulk Conc 182W added: {}\n"
+    "Mantle Conc 182W added: {}\n"
+    "Core Conc 182W added: {}\n"
+    "Core Mass 182W added: {}\n"
+    "Mantle mass 182W added: {}\n"
+    "Bulk Core Mass 182W: {}\n"
+    "Bulk Mantle Mass 182W: {}\n"
+    "Bulk Mass 182W check: {}\n"
+    "Core Bulk Conc 182W: {}\n"
+    "Mantle Bulk Conc 182W: {}\n".format(
+    fraction_core_accumulated[core_formation_max_time_index],
+    core_mass_added[core_formation_max_time_index],
+    mass_core[core_formation_max_time_index],
+    mantle_mass[core_formation_max_time_index],
+    moles_182hf[core_formation_max_time_index],
+    bulk_mass_182w[core_formation_max_time_index],
+    bulk_conc_182w[core_formation_max_time_index],
+    bulk_mass_182w_added[core_formation_max_time_index],
+    bulk_conc_182w_added[core_formation_max_time_index],
+    mantle_conc_182w_added[core_formation_max_time_index],
+    core_conc_182w_added[core_formation_max_time_index],
+    core_mass_182w_added[core_formation_max_time_index],
+    mantle_mass_182w_added[core_formation_max_time_index],
+    bulk_core_mass_182w[core_formation_max_time_index],
+    bulk_mantle_mass_182w[core_formation_max_time_index],
+    bulk_mass_182w_check[core_formation_max_time_index],
+    core_bulk_conc_182w[core_formation_max_time_index],
+    mantle_bulk_conc_182w[core_formation_max_time_index]
+    )
+)
 
 fraction_core_accumulated2, core_mass_added2, mantle_mass_depleted2, mass_core2,  mantle_mass2, \
            core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
            bulk_mass_w184_check, core_bulk_conc_184w, mantle_bulk_conc_184w, bulk_conc_184w_at_time, bulk_mass_w184_at_time, radius_mantle2, \
-            radius_core2, cmb_d2, temperatures2, pressures2 = \
-    decayW184(initial_conc_w184=initial_conc_w184, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
+            radius_core2, cmb_d2, temperatures2, pressures2, bulk_moles_184w_added_at_time, \
+            mantle_moles_184w_remaining_at_time, core_moles_184w_added_at_time, bulk_moles_184w, core_bulk_moles_184w, \
+            mantle_moles_184w = \
+            decayW184(initial_conc_w184=initial_conc_w184, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
               core_formation_max_time=core_formation_max_time, inf_time=inf_time, timestep=timestep,
               density_metal=density_metal, density_melt=density_melt, fO2=fO2, temperature_surf=temperature_surf,
               pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
-              thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity)
+              thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity, w184_at_wt=w182_at_wt)
+
+print(
+    "Fraction Core Accumulated: {}\n"
+    "Core Mass Added: {}\n"
+    "Mantle Mass Depleted: {}\n"
+    "Mass Core: {}\n"
+    "Mass Mantle: {}\n"
+    "Core Mass W184 added: {}\n"
+    "Current Mantle Mass W184: {}\n"
+    "Core Mass 184W: {}\n"
+    "Mantle Mass 184W: {}\n"
+    "Bulk Mass W184 Check: {}\n"
+    "Core Bulk Conc 184W: {}\n"
+    "Mantle Bulk Conc: {}\n".format(
+        fraction_core_accumulated2[core_formation_max_time_index],
+        core_mass_added2[core_formation_max_time_index],
+        mantle_mass_depleted2[core_formation_max_time_index],
+        mass_core2[core_formation_max_time_index],
+        mantle_mass2[core_formation_max_time_index],
+        core_mass_w184_added[core_formation_max_time_index],
+        current_mantle_mass_w184[core_formation_max_time_index],
+        core_mass_w184_at_time[core_formation_max_time_index],
+        mantle_mass_w184_at_time[core_formation_max_time_index],
+        bulk_mass_w184_check[core_formation_max_time_index],
+        core_bulk_conc_184w[core_formation_max_time_index],
+        mantle_bulk_conc_184w[core_formation_max_time_index]
+    )
+)
 
 bulk_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
                           for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
