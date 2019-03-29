@@ -64,7 +64,7 @@ def partition(pressure, temperature, deltaIW):
     return D
 
 def calcEpsilon182W(w182_at_time, w184_at_time, terretrial_standard):
-    epsilon = (((w182_at_time / w184_at_time) / terretrial_standard) - 1) * (10**4)
+    epsilon = (((w182_at_time / w184_at_time) / terretrial_standard) - 1)  * (10**4)
     return epsilon
 
 
@@ -436,10 +436,13 @@ density_melt = 3580
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-fO2 = -2.25
+fO2 = -0.8
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (263 * 1000)
+
+
+
 
 
 fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
@@ -600,7 +603,7 @@ ax5_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
 ax5_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
 ax5_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
 ax5_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax5_0.set_title("$^{182}$W/$^{184}$W Concentrations Over Time")
+ax5_0.set_title("$^{182}$W/$^{184}$W Concentrations On Vesta Over Time")
 ax5_0.set_xlabel("Time (Ma)")
 ax5_0.set_ylabel("$^{182}$W/$^{184}$W")
 ax5_0.grid()
@@ -612,7 +615,7 @@ ax6_0.plot(time_list_ma, bulk_ratio_wt_w182_w184, linewidth=2.0, label='Bulk')
 ax6_0.plot(time_list_ma, mantle_ratio_wt_w182_w184, linewidth=2.0, label='Mantle')
 ax6_0.plot(time_list_ma[1:], core_ratio_wt_w182_w184, linewidth=2.0, label='Core')
 ax6_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax6_0.set_title("$^{182}$W/$^{184}$W Mass Over Time")
+ax6_0.set_title("$^{182}$W/$^{184}$W Mass on Vesta Over Time")
 ax6_0.set_xlabel("Time (Ma)")
 ax6_0.set_ylabel("$^{182}$W/$^{184}$W")
 ax6_0.grid()
@@ -674,7 +677,17 @@ ax9_1.set_title("Metal-Silicate Partitioning Coefficient (D) at Vesta CMB Over T
 ax9_1.set_xlabel("Time (Ma)")
 ax9_1.set_ylabel("D")
 
-
+fig9 = plt.figure()
+ax9_0 = fig9.add_subplot(111)
+ax9_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
+ax9_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
+ax9_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
+ax9_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax9_0.set_title("$^{182}$W/$^{184}$W Concentrations on Vesta Over Time")
+ax9_0.set_xlabel("Time (Ma)")
+ax9_0.set_ylabel("$^{182}$W/$^{184}$W")
+ax9_0.grid()
+ax9_0.legend(loc='lower right')
 
 
 
