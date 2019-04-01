@@ -477,8 +477,15 @@ bulk_d_w_list = []
 cmbd_fO2 = []
 bulk_core_mass_182w_list = []
 bulk_mantle_mass_182w_list = []
+bulk_mass_182w_list = []
 bulk_core_mass_184w_list = []
 bulk_mantle_mass_184w_list = []
+mantle_w182_w184_ratios = []
+core_w182_w184_ratios = []
+bulk_w182_w184_ratios = []
+epsilon_core = []
+epsilon_mantle = []
+epsilon_bulk = []
 
 
 for index, i in enumerate(fO2):
@@ -542,8 +549,14 @@ for index, i in enumerate(fO2):
     bulk_mantle_mass_182w_list.append(bulk_mantle_mass_182w)
     bulk_core_mass_184w_list.append(core_mass_w184_at_time)
     bulk_mantle_mass_184w_list.append(mantle_mass_w184_at_time)
+    bulk_mass_182w_list.append(bulk_mass_182w)
     cmbd_fO2.append(cmb_d)
-
+    core_w182_w184_ratios.append([i / j for i, j in zip(bulk_core_mass_182w[1:], core_mass_w184_at_time[1:])])
+    mantle_w182_w184_ratios.append([i / j for i, j in zip(bulk_mantle_mass_182w, mantle_mass_w184_at_time)])
+    bulk_w182_w184_ratios.append([i / j for i, j in zip(bulk_mass_182w, bulk_mass_w184_at_time)])
+    epsilon_bulk.append(bulk_epsilon_w182_vesta)
+    epsilon_core.append(core_epsilon_w182_vesta)
+    epsilon_mantle.append(mantle_epsilon_w182_vesta)
 
 
 
@@ -785,10 +798,10 @@ ax12_1.fill_between(time_list_ma, bulk_mantle_mass_182w_list[0], bulk_mantle_mas
 ax12_1.fill_between(time_list_ma, bulk_mantle_mass_182w_list[2], bulk_mantle_mass_182w_list[3], label='Reducing Model')
 ax12_2.fill_between(time_list_ma, bulk_mantle_mass_184w_list[0], bulk_mantle_mass_184w_list[1], label='Oxidizing Model')
 ax12_2.fill_between(time_list_ma, bulk_mantle_mass_184w_list[2], bulk_mantle_mass_184w_list[3], label='Reducing Model')
-# ax12_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_182w_list[0]], [log10(i) for i in bulk_mantle_mass_182w_list[1]], label='Oxidizing Model')
-# ax12_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_182w_list[2]], [log10(i) for i in bulk_mantle_mass_182w_list[3]], label='Reducing Model')
-# ax12_2.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[0]], [log10(i) for i in bulk_mantle_mass_184w_list[1]], label='Oxidizing Model')
-# ax12_2.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[2]], [log10(i) for i in bulk_mantle_mass_184w_list[3]], label='Reducing Model')
+# ax12_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_mantle_mass_182w_list[0][1:]], [log10(i) for i in bulk_mantle_mass_182w_list[1][1:]], label='Oxidizing Model')
+# ax12_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_mantle_mass_182w_list[2][1:]], [log10(i) for i in bulk_mantle_mass_182w_list[3][1:]], label='Reducing Model')
+# ax12_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_mantle_mass_184w_list[0][1:]], [log10(i) for i in bulk_mantle_mass_184w_list[1][1:]], label='Oxidizing Model')
+# ax12_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_mantle_mass_184w_list[2][1:]], [log10(i) for i in bulk_mantle_mass_184w_list[3][1:]], label='Reducing Model')
 ax12_1.grid()
 ax12_2.grid()
 ax12_1.legend(loc='lower right')
@@ -804,6 +817,8 @@ ax12_0.set_xlabel("Time (Ma)")
 ax12_0.set_ylabel("Mass (kg)")
 ax12_0.set_title("$^{182}$W Mass on Vesta over Time")
 
+
+
 fig13 = plt.figure()
 ax13_0 = fig13.add_subplot(111)
 ax13_1 = fig13.add_subplot(211)
@@ -814,10 +829,10 @@ ax13_1.fill_between(time_list_ma, bulk_mantle_mass_184w_list[0], bulk_mantle_mas
 ax13_1.fill_between(time_list_ma, bulk_mantle_mass_184w_list[2], bulk_mantle_mass_184w_list[3], label='Reducing Model')
 ax13_2.fill_between(time_list_ma, bulk_core_mass_184w_list[0], bulk_core_mass_184w_list[1], label='Oxidizing Model')
 ax13_2.fill_between(time_list_ma, bulk_core_mass_184w_list[2], bulk_core_mass_184w_list[3], label='Reducing Model')
-# ax13_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[0]], [log10(i) for i in bulk_mantle_mass_184w_list[1]], label='Oxidizing Model')
-# ax13_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[2]], [log10(i) for i in bulk_mantle_mass_184w_list[3]], label='Reducing Model')
-# ax13_2.fill_between(time_list_ma, [log10(i) for i in bulk_core_mass_184w_list[0]], [log10(i) for i in bulk_core_mass_184w_list[1]], label='Oxidizing Model')
-# ax13_2.fill_between(time_list_ma, [log10(i) for i in bulk_core_mass_184w_list[2]], [log10(i) for i in bulk_core_mass_184w_list[3]], label='Reducing Model')
+# ax13_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_mantle_mass_184w_list[0][1:]], [log10(i) for i in bulk_mantle_mass_184w_list[1][1:]], label='Oxidizing Model')
+# ax13_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_mantle_mass_184w_list[2][1:]], [log10(i) for i in bulk_mantle_mass_184w_list[3][1:]], label='Reducing Model')
+# ax13_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_core_mass_184w_list[0][1:]], [log10(i) for i in bulk_core_mass_184w_list[1][1:]], label='Oxidizing Model')
+# ax13_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_core_mass_184w_list[2][1:]], [log10(i) for i in bulk_core_mass_184w_list[3][1:]], label='Reducing Model')
 ax13_1.grid()
 ax13_2.grid()
 ax13_0.spines['top'].set_color('none')
@@ -835,13 +850,15 @@ ax13_2.legend(loc='lower right')
 
 fig14 = plt.figure()
 ax14_1 = fig14.add_subplot(111)
-ax14_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax14_1.fill_between(time_list_ma, cmbd_fO2[0], cmbd_fO2[1], label='Oxidizing Model')
-ax14_1.fill_between(time_list_ma, cmbd_fO2[2], cmbd_fO2[3], label='Reducing Model')
+# ax14_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax14_1.fill_between(time_list_ma[0:core_formation_max_time_index], [log10(i) for i in cmbd_fO2[0][0:core_formation_max_time_index]], [log10(i) for i in cmbd_fO2[1][0:core_formation_max_time_index]], label='Oxidizing Model')
+# ax14_1.fill_between(time_list_ma[0:core_formation_max_time_index], [log10(i) for i in cmbd_fO2[2][0:core_formation_max_time_index]], [log10(i) for i in cmbd_fO2[3][0:core_formation_max_time_index]], label='Reducing Model')
+ax14_1.fill_between(time_list_ma[0:core_formation_max_time_index], [log10(i) for i in cmbd_fO2[0][0:core_formation_max_time_index]], [log10(i) for i in cmbd_fO2[1][0:core_formation_max_time_index]], label='Oxidizing Model')
+ax14_1.fill_between(time_list_ma[0:core_formation_max_time_index], [log10(i) for i in cmbd_fO2[2][0:core_formation_max_time_index]], [log10(i) for i in cmbd_fO2[3][0:core_formation_max_time_index]], label='Reducing Model')
 ax14_1.grid()
-ax14_1.set_title("Metal-Silicate Partitioning Coefficient (D)) at Vesta CMB Over Time")
+ax14_1.set_title("Metal-Silicate Partitioning Coefficient (log(D))) at Vesta CMB Over Time")
 ax14_1.set_xlabel("Time (Ma)")
-ax14_1.set_ylabel("D")
+ax14_1.set_ylabel("log(D)")
 ax14_1.legend(loc='center right')
 # ax14_1.set_yscale('log')
 
@@ -851,14 +868,14 @@ ax15_1 = fig15.add_subplot(211)
 ax15_2 = fig15.add_subplot(212)
 ax15_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax15_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-# ax15_1.fill_between(time_list_ma[1:], bulk_d_w182_list[0], bulk_d_w182_list[1], label='Oxidizing Model')
-# ax15_1.fill_between(time_list_ma[1:], bulk_d_w182_list[2], bulk_d_w182_list[3], label='Reducing Model')
-# ax15_2.fill_between(time_list_ma[1:], bulk_d_w184_list[0], bulk_d_w184_list[1], label='Oxidizing Model')
-# ax15_2.fill_between(time_list_ma[1:], bulk_d_w184_list[2], bulk_d_w184_list[3], label='Reducing Model')
-ax15_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w182_list[0]], [log10(i) for i in bulk_d_w182_list[1]], label='Oxidizing Model')
-ax15_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w182_list[2]], [log10(i) for i in bulk_d_w182_list[3]], label='Reducing Model')
-ax15_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w184_list[0]], [log10(i) for i in bulk_d_w184_list[1]], label='Oxidizing Model')
-ax15_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w184_list[2]], [log10(i) for i in bulk_d_w184_list[3]], label='Reducing Model')
+ax15_1.fill_between(time_list_ma[1:], bulk_d_w182_list[0], bulk_d_w182_list[1], label='Oxidizing Model')
+ax15_1.fill_between(time_list_ma[1:], bulk_d_w182_list[2], bulk_d_w182_list[3], label='Reducing Model')
+ax15_2.fill_between(time_list_ma[1:], bulk_d_w184_list[0], bulk_d_w184_list[1], label='Oxidizing Model')
+ax15_2.fill_between(time_list_ma[1:], bulk_d_w184_list[2], bulk_d_w184_list[3], label='Reducing Model')
+# ax15_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w182_list[0]], [log10(i) for i in bulk_d_w182_list[1]], label='Oxidizing Model')
+# ax15_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w182_list[2]], [log10(i) for i in bulk_d_w182_list[3]], label='Reducing Model')
+# ax15_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w184_list[0]], [log10(i) for i in bulk_d_w184_list[1]], label='Oxidizing Model')
+# ax15_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w184_list[2]], [log10(i) for i in bulk_d_w184_list[3]], label='Reducing Model')
 ax15_0.spines['top'].set_color('none')
 ax15_0.spines['bottom'].set_color('none')
 ax15_0.spines['left'].set_color('none')
@@ -875,6 +892,65 @@ ax15_1.legend(loc='upper right')
 ax15_2.legend(loc='lower right')
 # ax15_1.set_yscale('log')
 # ax15_2.set_yscale('log')
+
+fig16 = plt.figure()
+ax16_0 = fig16.add_subplot(111)
+ax16_1 = fig16.add_subplot(311)
+ax16_2 = fig16.add_subplot(312)
+ax16_3 = fig16.add_subplot(313)
+for index, i in enumerate(fO2):
+    ax16_1.plot(time_list_ma[1:], core_w182_w184_ratios[index], label='fO$_2$ = IW{} (Core)'.format(i))
+    ax16_2.plot(time_list_ma, mantle_w182_w184_ratios[index], label='fO$_2$ = IW{} (Mantle)'.format(i))
+    ax16_3.plot(time_list_ma, bulk_w182_w184_ratios[index], label='fO$_2$ = IW{} (Bulk)'.format(i))
+ax16_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax16_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax16_3.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax16_0.spines['top'].set_color('none')
+ax16_0.spines['bottom'].set_color('none')
+ax16_0.spines['left'].set_color('none')
+ax16_0.spines['right'].set_color('none')
+ax16_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax16_0.xaxis.labelpad = 20
+ax16_0.yaxis.labelpad = 20
+ax16_1.grid()
+ax16_2.grid()
+ax16_3.grid()
+ax16_0.set_title("$^{182}$W/$^{184}$W On Vesta Over Time")
+ax16_0.set_xlabel("Time (Ma)")
+ax16_0.set_ylabel("$^{182}$W/$^{184}$W")
+ax16_1.legend(loc='upper right')
+ax16_2.legend(loc='lower right')
+ax16_3.legend(loc='lower right')
+
+fig17 = plt.figure()
+ax17_0 = fig17.add_subplot(111)
+ax17_1 = fig17.add_subplot(311)
+ax17_2 = fig17.add_subplot(312)
+ax17_3 = fig17.add_subplot(313)
+for index, i in enumerate(fO2):
+    ax17_1.plot(time_list_ma[1:], epsilon_core[index], label='fO$_2$ = IW{} (Core)'.format(i))
+    ax17_2.plot(time_list_ma, epsilon_mantle[index], label='fO$_2$ = IW{} (Mantle)'.format(i))
+    ax17_3.plot(time_list_ma, epsilon_bulk[index], label='fO$_2$ = IW{} (Bulk)'.format(i))
+ax17_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax17_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax17_3.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax17_0.spines['top'].set_color('none')
+ax17_0.spines['bottom'].set_color('none')
+ax17_0.spines['left'].set_color('none')
+ax17_0.spines['right'].set_color('none')
+ax17_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax17_0.xaxis.labelpad = 20
+ax17_0.yaxis.labelpad = 20
+ax17_1.grid()
+ax17_2.grid()
+ax17_3.grid()
+ax17_0.set_title("$\epsilon^{182}$W On Vesta Over Time")
+ax17_0.set_xlabel("Time (Ma)")
+ax17_0.set_ylabel("$\epsilon^{182}$W")
+ax17_1.legend(loc='upper right')
+ax17_2.legend(loc='lower right')
+ax17_3.legend(loc='lower right')
+
 
 
 plt.show()
