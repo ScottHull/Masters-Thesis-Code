@@ -450,7 +450,8 @@ mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
 initial_hf182_conc = [16.55078, 16.55577, 16.57443, 16.57467]
 initial_conc_w184 = [23.29356, 23.71133, 24.10029, 24.108527]
-terrestrial_standard = 0.864900
+# terrestrial_standard = 0.864900  # Kleine et al 2017
+terrestrial_standard = 0.864680  # Kleine et al 2004
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
 core_formation_max_time_index = time_list.index(core_formation_max_time)
@@ -463,7 +464,7 @@ pressure_surf = 0
 radius_body = (262.7 * 1000)
 
 avg_eucrite_w182_w184_ratio = 0.866555125
-avg_eucrite_epsilon_w182 = 19.13660539
+# avg_eucrite_epsilon_w182 = 19.13660539
 
 
 print(
@@ -557,6 +558,8 @@ for index, i in enumerate(fO2):
     epsilon_bulk.append(bulk_epsilon_w182_vesta)
     epsilon_core.append(core_epsilon_w182_vesta)
     epsilon_mantle.append(mantle_epsilon_w182_vesta)
+
+    print("fO2: {}, 182W/184W: {}, Eucrite 182W/184W: {}\n".format(i, mantle_w182_w184_ratios[-1][-1], avg_eucrite_w182_w184_ratio))
 
 
 
