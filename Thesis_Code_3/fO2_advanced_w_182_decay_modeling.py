@@ -2,7 +2,7 @@ import matplotlib as mpl
 mpl.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
-from math import log, exp, sqrt, pi
+from math import log, exp, sqrt, pi, log10
 import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
@@ -286,7 +286,6 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
     mass_core = [0]
     mantle_mass = [mass_vesta]
 
-    initial_bulk_moles_w182 = (((initial_hf182_conc * (10 ** -9)) * mass_vesta) * 1000) / hf182_at_wt
     initial_radius_mantle, initial_radius_core = calcRadMantle(mass_core=mass_core[0], density_metal=density_metal,
                                                                radius_body=radius_body)
     initial_temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
@@ -435,7 +434,7 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
 
 
 density_metal = 7800
-density_melt = 3580
+density_melt = 3750
 timestep = 250000
 core_formation_max_time = 5 * (10**6)
 inf_time = 100 * (10**6)
@@ -449,8 +448,8 @@ radius_vesta_core = 113 * 1000
 volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
 mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
-initial_hf182_conc = 16.613
-initial_conc_w184 = 24.101
+initial_hf182_conc = [16.55078, 16.55577, 16.57443, 16.57467]
+initial_conc_w184 = [23.29356, 23.71133, 24.10029, 24.108527]
 terrestrial_standard = 0.864900
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
@@ -458,10 +457,10 @@ core_formation_max_time_index = time_list.index(core_formation_max_time)
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-fO2 = -2.25
+fO2 = [-0.8, -1.10, -2.25, -2.45]
 temperature_surf = 2000
 pressure_surf = 0
-radius_body = (263 * 1000)
+radius_body = (262.7 * 1000)
 
 avg_eucrite_w182_w184_ratio = 0.866555125
 avg_eucrite_epsilon_w182 = 19.13660539
@@ -472,144 +471,107 @@ print(
     "Mass Vesta Mantle: {}\n".format(mass_vesta_core, mass_vesta_mantle)
 )
 
+bulk_d_w182_list = []
+bulk_d_w184_list = []
+bulk_d_w_list = []
+cmbd_fO2 = []
+bulk_core_mass_182w_list = []
+bulk_mantle_mass_182w_list = []
+bulk_core_mass_184w_list = []
+bulk_mantle_mass_184w_list = []
 
 
-fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
-           bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
-           core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
-           bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w, radius_mantle, \
-            radius_core, cmb_d, temperatures, pressures, bulk_moles_182w_added_at_time, \
-            mantle_moles_182w_added_at_time, core_moles_182w_added_at_time, bulk_moles_182w, core_bulk_moles_182w, \
-            mantle_moles_182w = \
-                decayW182(timestep=timestep, core_formation_max_time=core_formation_max_time, inf_time=inf_time,
-              w182_at_wt=w182_at_wt, hf182_half_life=hf182_half_life, hf182_at_wt=hf182_at_wt,
-              initial_hf182_conc=initial_hf182_conc, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
-              density_metal=density_metal, density_melt=density_melt, fO2=fO2, temperature_surf=temperature_surf,
-              pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
-              thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity)
+for index, i in enumerate(fO2):
+    hf182_conc = initial_hf182_conc[index]
+    w_184_conc = initial_conc_w184[index]
 
-print(
-    "Fraction Core Accumulated: {}\n"
-    "Mass Core Added: {}\n"
-    "Mass Core: {}\n"
-    "Mantle Mass: {}\n"
-    "Moles 182Hf: {}\n"
-    "Bulk Mass 182W: {}\n"
-    "Bulk Conc 182W: {}\n"
-    "Bulk Mass 182W added: {}\n"
-    "Bulk Conc 182W added: {}\n"
-    "Mantle Conc 182W added: {}\n"
-    "Core Conc 182W added: {}\n"
-    "Core Mass 182W added: {}\n"
-    "Mantle mass 182W added: {}\n"
-    "Bulk Core Mass 182W: {}\n"
-    "Bulk Mantle Mass 182W: {}\n"
-    "Bulk Mass 182W check: {}\n"
-    "Core Bulk Conc 182W: {}\n"
-    "Mantle Bulk Conc 182W: {}\n".format(
-    fraction_core_accumulated[core_formation_max_time_index],
-    core_mass_added[core_formation_max_time_index],
-    mass_core[core_formation_max_time_index],
-    mantle_mass[core_formation_max_time_index],
-    moles_182hf[core_formation_max_time_index],
-    bulk_mass_182w[core_formation_max_time_index],
-    bulk_conc_182w[core_formation_max_time_index],
-    bulk_mass_182w_added[core_formation_max_time_index],
-    bulk_conc_182w_added[core_formation_max_time_index],
-    mantle_conc_182w_added[core_formation_max_time_index],
-    core_conc_182w_added[core_formation_max_time_index],
-    core_mass_182w_added[core_formation_max_time_index],
-    mantle_mass_182w_added[core_formation_max_time_index],
-    bulk_core_mass_182w[core_formation_max_time_index],
-    bulk_mantle_mass_182w[core_formation_max_time_index],
-    bulk_mass_182w_check[core_formation_max_time_index],
-    core_bulk_conc_182w[core_formation_max_time_index],
-    mantle_bulk_conc_182w[core_formation_max_time_index]
-    )
-)
+    fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
+               bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
+               core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
+               bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w, radius_mantle, \
+                radius_core, cmb_d, temperatures, pressures, bulk_moles_182w_added_at_time, \
+                mantle_moles_182w_added_at_time, core_moles_182w_added_at_time, bulk_moles_182w, core_bulk_moles_182w, \
+                mantle_moles_182w = \
+                    decayW182(timestep=timestep, core_formation_max_time=core_formation_max_time, inf_time=inf_time,
+                  w182_at_wt=w182_at_wt, hf182_half_life=hf182_half_life, hf182_at_wt=hf182_at_wt,
+                  initial_hf182_conc=hf182_conc, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
+                  density_metal=density_metal, density_melt=density_melt, fO2=i, temperature_surf=temperature_surf,
+                  pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
+                  thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity)
 
-fraction_core_accumulated2, core_mass_added2, mantle_mass_depleted2, mass_core2,  mantle_mass2, \
-           core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
-           bulk_mass_w184_check, core_bulk_conc_184w, mantle_bulk_conc_184w, bulk_conc_184w_at_time, bulk_mass_w184_at_time, radius_mantle2, \
-            radius_core2, cmb_d2, temperatures2, pressures2, bulk_moles_184w_added_at_time, \
-            mantle_moles_184w_remaining_at_time, core_moles_184w_added_at_time, bulk_moles_184w, core_bulk_moles_184w, \
-            mantle_moles_184w = \
-            decayW184(initial_conc_w184=initial_conc_w184, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
-              core_formation_max_time=core_formation_max_time, inf_time=inf_time, timestep=timestep,
-              density_metal=density_metal, density_melt=density_melt, fO2=fO2, temperature_surf=temperature_surf,
-              pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
-              thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity, w184_at_wt=w182_at_wt)
+    fraction_core_accumulated2, core_mass_added2, mantle_mass_depleted2, mass_core2,  mantle_mass2, \
+               core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
+               bulk_mass_w184_check, core_bulk_conc_184w, mantle_bulk_conc_184w, bulk_conc_184w_at_time, bulk_mass_w184_at_time, radius_mantle2, \
+                radius_core2, cmb_d2, temperatures2, pressures2, bulk_moles_184w_added_at_time, \
+                mantle_moles_184w_remaining_at_time, core_moles_184w_added_at_time, bulk_moles_184w, core_bulk_moles_184w, \
+                mantle_moles_184w = \
+                decayW184(initial_conc_w184=w_184_conc, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
+                  core_formation_max_time=core_formation_max_time, inf_time=inf_time, timestep=timestep,
+                  density_metal=density_metal, density_melt=density_melt, fO2=i, temperature_surf=temperature_surf,
+                  pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
+                  thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity, w184_at_wt=w182_at_wt)
 
-print(
-    "Fraction Core Accumulated: {}\n"
-    "Core Mass Added: {}\n"
-    "Mantle Mass Depleted: {}\n"
-    "Mass Core: {}\n"
-    "Mass Mantle: {}\n"
-    "Core Mass W184 added: {}\n"
-    "Current Mantle Mass W184: {}\n"
-    "Core Mass 184W: {}\n"
-    "Mantle Mass 184W: {}\n"
-    "Bulk Mass W184 Check: {}\n"
-    "Core Bulk Conc 184W: {}\n"
-    "Mantle Bulk Conc: {}\n".format(
-        fraction_core_accumulated2[core_formation_max_time_index],
-        core_mass_added2[core_formation_max_time_index],
-        mantle_mass_depleted2[core_formation_max_time_index],
-        mass_core2[core_formation_max_time_index],
-        mantle_mass2[core_formation_max_time_index],
-        core_mass_w184_added[core_formation_max_time_index],
-        current_mantle_mass_w184[core_formation_max_time_index],
-        core_mass_w184_at_time[core_formation_max_time_index],
-        mantle_mass_w184_at_time[core_formation_max_time_index],
-        bulk_mass_w184_check[core_formation_max_time_index],
-        core_bulk_conc_184w[core_formation_max_time_index],
-        mantle_bulk_conc_184w[core_formation_max_time_index]
-    )
-)
+    bulk_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
+                               for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
+    mantle_epsilon_w182_vesta = [
+        calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
+        for i, j in zip(mantle_bulk_conc_182w, mantle_bulk_conc_184w)]
+    core_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
+                               for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
 
-bulk_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
-                          for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
-mantle_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
-                          for i, j in zip(mantle_bulk_conc_182w, mantle_bulk_conc_184w)]
-core_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
-                          for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
+    bulk_d_182w = [i / j for i, j in zip(bulk_core_mass_182w[1:], bulk_mantle_mass_182w[1:])]
+    bulk_d_184w = [i / j for i, j in zip(core_mass_w184_at_time[1:], mantle_mass_w184_at_time[1:])]
+    bulk_d_w = [(i + j) / (l + k)  for i, j, l, k in zip(bulk_core_mass_182w[1:], bulk_mantle_mass_182w[1:],
+                                                         core_mass_w184_at_time, mantle_mass_w184_at_time)]
 
-bulk_d_182w = [i / j for i, j in zip(bulk_core_mass_182w[1:], bulk_mantle_mass_182w[1:])]
-bulk_d_184w = [i / j for i, j in zip(core_mass_w184_at_time[1:], mantle_mass_w184_at_time[1:])]
+    bulk_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mass_182w, bulk_mass_w184_at_time)]
+    mantle_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mantle_mass_182w, mantle_mass_w184_at_time)]
+    core_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_core_mass_182w[1:], core_mass_w184_at_time[1:])]
+    bulk_ratio_conc_w182_w184 = [i / j for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
+    mantle_ratio_conc_w182_w184 = [i / j for i, j in zip(mantle_bulk_conc_182w, mantle_bulk_conc_184w)]
+    core_ratio_conc_w182_w184 = [i / j for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
+    pct_mass_in_core_w182 = [i / bulk_mass_182w[-1] for i in bulk_core_mass_182w]
+    pct_mass_in_mantle_w182 = [i / bulk_mass_182w[-1] for i in bulk_mantle_mass_182w]
+    pct_mass_in_core_w184 = [i / bulk_mass_w184_at_time[-1] for i in core_mass_w184_at_time]
+    pct_mass_in_mantle_w184 = [i / bulk_mass_w184_at_time[-1] for i in mantle_mass_w184_at_time]
 
-bulk_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mass_182w, bulk_mass_w184_at_time)]
-mantle_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mantle_mass_182w, mantle_mass_w184_at_time)]
-core_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_core_mass_182w[1:], core_mass_w184_at_time[1:])]
-bulk_ratio_conc_w182_w184 = [i / j for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
-mantle_ratio_conc_w182_w184 = [i / j for i, j in zip(mantle_bulk_conc_182w, mantle_bulk_conc_184w)]
-core_ratio_conc_w182_w184 = [i / j for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
-pct_mass_in_core_w182 = [i / bulk_mass_182w[-1] for i in bulk_core_mass_182w]
-pct_mass_in_mantle_w182 = [i / bulk_mass_182w[-1] for i in bulk_mantle_mass_182w]
-pct_mass_in_core_w184 = [i / bulk_mass_w184_at_time[-1] for i in core_mass_w184_at_time]
-pct_mass_in_mantle_w184 = [i / bulk_mass_w184_at_time[-1] for i in mantle_mass_w184_at_time]
+    bulk_d_w182_list.append(bulk_d_182w)
+    bulk_d_w184_list.append(bulk_d_184w)
+    bulk_d_w_list.append(bulk_d_w)
+    bulk_core_mass_182w_list.append(bulk_core_mass_182w)
+    bulk_mantle_mass_182w_list.append(bulk_mantle_mass_182w)
+    bulk_core_mass_184w_list.append(core_mass_w184_at_time)
+    bulk_mantle_mass_184w_list.append(mantle_mass_w184_at_time)
+    cmbd_fO2.append(cmb_d)
 
 
-fig1 = plt.figure()
-ax1 = fig1.add_subplot(111)
-ax1.plot(time_list_ma, bulk_epsilon_w182_vesta, linewidth=2.0, label='Bulk')
-ax1.plot(time_list_ma, mantle_epsilon_w182_vesta, linewidth=2.0, label='Mantle')
-ax1.plot(time_list_ma[1:], core_epsilon_w182_vesta, linewidth=2.0, label='Core')
-ax1.axhline(avg_eucrite_epsilon_w182, linestyle='--', color='red', label="Avg. Eucrite")
-ax1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax1.grid()
-ax1.set_title("$\epsilon^{182}$W on Vesta Through Time")
-ax1.set_xlabel("Time (Ma)")
-ax1.set_ylabel("$\epsilon^{182}$W")
-ax1.legend(loc='upper left')
+
+
+
+
+
+
+# fig1 = plt.figure()
+# ax1 = fig1.add_subplot(111)
+# ax1.plot(time_list_ma, bulk_epsilon_w182_vesta, linewidth=2.0, label='Bulk')
+# ax1.plot(time_list_ma, mantle_epsilon_w182_vesta, linewidth=2.0, label='Mantle')
+# ax1.plot(time_list_ma[1:], core_epsilon_w182_vesta, linewidth=2.0, label='Core')
+# ax1.axhline(avg_eucrite_epsilon_w182, linestyle='--', color='red', label="Avg. Eucrite")
+# ax1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax1.grid()
+# ax1.set_title("$\epsilon^{182}$W on Vesta Through Time")
+# ax1.set_xlabel("Time (Ma)")
+# ax1.set_ylabel("$\epsilon^{182}$W")
+# ax1.legend(loc='upper left')
 
 
 fig2 = plt.figure()
 ax2_0 = fig2.add_subplot(111)
 ax2_1 = fig2.add_subplot(211)
 ax2_2 = fig2.add_subplot(212)
-ax2_1.plot(time_list_ma, mantle_bulk_conc_182w, linewidth=2.0, color='black', label='Mantle')
-ax2_2.plot(time_list_ma, core_bulk_conc_182w, linewidth=2.0, color='black', label='Core')
+for index, i in enumerate(fO2):
+    ax2_1.plot(time_list_ma, bulk_mantle_mass_182w_list[index], linewidth=2.0, label='Mantle, fO$_2$ = IW{}'.format(i))
+    ax2_2.plot(time_list_ma, bulk_core_mass_184w_list[index], linewidth=2.0, label='Core, fO$_2$ = IW{}'.format(i))
 ax2_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax2_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax2_1.grid()
@@ -624,33 +586,32 @@ ax2_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='of
 ax2_0.xaxis.labelpad = 20
 ax2_0.yaxis.labelpad = 20
 ax2_0.set_xlabel("Time (Ma)")
-ax2_0.set_ylabel("Concentration (ppb)")
-ax2_0.set_title("$^{182}$W Concentration on Vesta over Time")
+ax2_0.set_ylabel("Mass (kg)")
+ax2_0.set_title("$^{182}$W Mass on Vesta over Time")
 
 
-fig3 = plt.figure()
-ax3_0 = fig3.add_subplot(111)
-ax3_0.plot(time_list_ma, mass_core, linewidth=2.0, label='Core')
-ax3_0.plot(time_list_ma, mantle_mass, linewidth=2.0, label='Mantle')
-ax3_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax3_0.grid()
-ax3_0.set_title("Core and Mantle Mass on Vesta Over Time")
-ax3_0.set_xlabel("Time (Ma)")
-ax3_0.set_ylabel("Mass (kg)")
-ax3_0.legend(loc='lower right')
+# fig3 = plt.figure()
+# ax3_0 = fig3.add_subplot(111)
+# ax3_0.plot(time_list_ma, mass_core, linewidth=2.0, label='Core')
+# ax3_0.plot(time_list_ma, mantle_mass, linewidth=2.0, label='Mantle')
+# ax3_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax3_0.grid()
+# ax3_0.set_title("Core and Mantle Mass on Vesta Over Time")
+# ax3_0.set_xlabel("Time (Ma)")
+# ax3_0.set_ylabel("Mass (kg)")
+# ax3_0.legend(loc='lower right')
 
 fig4 = plt.figure()
 ax4_0 = fig4.add_subplot(111)
 ax4_1 = fig4.add_subplot(211)
 ax4_2 = fig4.add_subplot(212)
-ax4_1.plot(time_list_ma, mantle_bulk_conc_184w, linewidth=2.0, color='black', label='Mantle')
-ax4_2.plot(time_list_ma, core_bulk_conc_184w, color='black', linewidth=2.0, label='Core')
+for index, i in enumerate(fO2):
+    ax4_1.plot(time_list_ma, bulk_mantle_mass_184w_list[index], linewidth=2.0, label='Mantle, fO$_2$ = IW{}'.format(i))
+    ax4_2.plot(time_list_ma, bulk_core_mass_184w_list[index], linewidth=2.0, label='Core, fO$_2$ = IW{}'.format(i))
 ax4_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax4_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax4_1.grid()
 ax4_2.grid()
-ax4_1.legend(loc='lower right')
-ax4_2.legend(loc='lower right')
 ax4_0.spines['top'].set_color('none')
 ax4_0.spines['bottom'].set_color('none')
 ax4_0.spines['left'].set_color('none')
@@ -659,91 +620,96 @@ ax4_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='of
 ax4_0.xaxis.labelpad = 20
 ax4_0.yaxis.labelpad = 20
 ax4_0.set_xlabel("Time (Ma)")
-ax4_0.set_ylabel("Concentration (ppb)")
-ax4_0.set_title("$^{184}$W Concentration on Vesta over Time")
+ax4_0.set_ylabel("Mass (kg)")
+ax4_0.set_title("$^{184}$W Mass on Vesta over Time")
+ax4_1.legend(loc='upper right')
+ax4_2.legend(loc='lower right')
 
-fig5 = plt.figure()
-ax5_0 = fig5.add_subplot(111)
-ax5_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
-ax5_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
-ax5_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
-ax5_0.axhline(avg_eucrite_w182_w184_ratio, linestyle='--', color='red', label="Avg. Eucrite")
-ax5_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax5_0.set_title("$^{182}$W/$^{184}$W Concentrations On Vesta Over Time")
-ax5_0.set_xlabel("Time (Ma)")
-ax5_0.set_ylabel("$^{182}$W/$^{184}$W")
-ax5_0.grid()
-ax5_0.legend(loc='lower right')
+# fig5 = plt.figure()
+# ax5_0 = fig5.add_subplot(111)
+# ax5_0.plot(time_list_ma, bulk_ratio_conc_w182_w184, linewidth=2.0, label='Bulk')
+# ax5_0.plot(time_list_ma, mantle_ratio_conc_w182_w184, linewidth=2.0, label='Mantle')
+# ax5_0.plot(time_list_ma[1:], core_ratio_conc_w182_w184, linewidth=2.0, label='Core')
+# ax5_0.axhline(avg_eucrite_w182_w184_ratio, linestyle='--', color='red', label="Avg. Eucrite")
+# ax5_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax5_0.set_title("$^{182}$W/$^{184}$W Concentrations On Vesta Over Time")
+# ax5_0.set_xlabel("Time (Ma)")
+# ax5_0.set_ylabel("$^{182}$W/$^{184}$W")
+# ax5_0.grid()
+# ax5_0.legend(loc='lower right')
+#
+# fig6 = plt.figure()
+# ax6_0 = fig6.add_subplot(111)
+# ax6_0.plot(time_list_ma, bulk_ratio_wt_w182_w184, linewidth=2.0, label='Bulk')
+# ax6_0.plot(time_list_ma, mantle_ratio_wt_w182_w184, linewidth=2.0, label='Mantle')
+# ax6_0.plot(time_list_ma[1:], core_ratio_wt_w182_w184, linewidth=2.0, label='Core')
+# ax6_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax6_0.set_title("$^{182}$W/$^{184}$W Mass on Vesta Over Time")
+# ax6_0.set_xlabel("Time (Ma)")
+# ax6_0.set_ylabel("$^{182}$W/$^{184}$W")
+# ax6_0.grid()
+# ax6_0.legend(loc='lower right')
 
-fig6 = plt.figure()
-ax6_0 = fig6.add_subplot(111)
-ax6_0.plot(time_list_ma, bulk_ratio_wt_w182_w184, linewidth=2.0, label='Bulk')
-ax6_0.plot(time_list_ma, mantle_ratio_wt_w182_w184, linewidth=2.0, label='Mantle')
-ax6_0.plot(time_list_ma[1:], core_ratio_wt_w182_w184, linewidth=2.0, label='Core')
-ax6_0.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax6_0.set_title("$^{182}$W/$^{184}$W Mass on Vesta Over Time")
-ax6_0.set_xlabel("Time (Ma)")
-ax6_0.set_ylabel("$^{182}$W/$^{184}$W")
-ax6_0.grid()
-ax6_0.legend(loc='lower right')
-
-fig7 = plt.figure()
-ax7_0 = fig7.add_subplot(111)
-ax7_1 = fig7.add_subplot(211)
-ax7_2 = fig7.add_subplot(212)
-ax7_1.plot(time_list_ma, pct_mass_in_mantle_w182, linewidth=2.0, label='$^{182}$W in Mantle')
-ax7_1.plot(time_list_ma, pct_mass_in_core_w182, linewidth=2.0, label='$^{182}$W in Core')
-ax7_2.plot(time_list_ma, pct_mass_in_mantle_w184, linewidth=2.0, label='$^{184}$W in Mantle')
-ax7_2.plot(time_list_ma, pct_mass_in_core_w184, linewidth=2.0, label='$^{184}$W in Core')
-ax7_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax7_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax7_1.grid()
-ax7_2.grid()
-ax7_0.spines['top'].set_color('none')
-ax7_0.spines['bottom'].set_color('none')
-ax7_0.spines['left'].set_color('none')
-ax7_0.spines['right'].set_color('none')
-ax7_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
-ax7_0.xaxis.labelpad = 20
-ax7_0.yaxis.labelpad = 20
-ax7_0.set_ylabel("Percent (%)")
-ax7_0.set_xlabel("Time (Ma)")
-ax7_0.set_title("$^{182}$W Mass Percent in Vesta Over Time (Relative to Infinite Time $^{182}$W)")
-ax7_1.legend(loc='lower right')
-ax7_2.legend(loc='lower right')
-
-fig8 = plt.figure()
-ax8_0 = fig8.add_subplot(111)
-ax8_1 = fig8.add_subplot(211)
-ax8_2 = fig8.add_subplot(212)
-ax8_1.plot(time_list_ma, temperatures, linewidth=2.0, color='black', label='Temperature at CMB')
-ax8_2.plot(time_list_ma, pressures, linewidth=2.0, color='black', label='Pressure at CMB')
-ax8_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax8_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax8_1.set_ylabel("Temeperature (K)")
-ax8_2.set_ylabel("Pressure (GPa)")
-ax8_1.grid()
-ax8_2.grid()
-ax8_0.spines['top'].set_color('none')
-ax8_0.spines['bottom'].set_color('none')
-ax8_0.spines['left'].set_color('none')
-ax8_0.spines['right'].set_color('none')
-ax8_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
-ax8_0.xaxis.labelpad = 20
-ax8_0.yaxis.labelpad = 20
-ax8_0.set_xlabel("Time (Ma)")
-ax8_0.set_title("Adiabatic Temperature and Hydrostatic Pressure at Vesta CMB Over Time")
-ax8_1.legend(loc='upper right')
-ax8_2.legend(loc='upper right')
+# fig7 = plt.figure()
+# ax7_0 = fig7.add_subplot(111)
+# ax7_1 = fig7.add_subplot(211)
+# ax7_2 = fig7.add_subplot(212)
+# ax7_1.plot(time_list_ma, pct_mass_in_mantle_w182, linewidth=2.0, label='$^{182}$W in Mantle')
+# ax7_1.plot(time_list_ma, pct_mass_in_core_w182, linewidth=2.0, label='$^{182}$W in Core')
+# ax7_2.plot(time_list_ma, pct_mass_in_mantle_w184, linewidth=2.0, label='$^{184}$W in Mantle')
+# ax7_2.plot(time_list_ma, pct_mass_in_core_w184, linewidth=2.0, label='$^{184}$W in Core')
+# ax7_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax7_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax7_1.grid()
+# ax7_2.grid()
+# ax7_0.spines['top'].set_color('none')
+# ax7_0.spines['bottom'].set_color('none')
+# ax7_0.spines['left'].set_color('none')
+# ax7_0.spines['right'].set_color('none')
+# ax7_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+# ax7_0.xaxis.labelpad = 20
+# ax7_0.yaxis.labelpad = 20
+# ax7_0.set_ylabel("Percent (%)")
+# ax7_0.set_xlabel("Time (Ma)")
+# ax7_0.set_title("$^{182}$W Mass Percent in Vesta Over Time (Relative to Infinite Time $^{182}$W)")
+# ax7_1.legend(loc='lower right')
+# ax7_2.legend(loc='lower right')
+#
+# fig8 = plt.figure()
+# ax8_0 = fig8.add_subplot(111)
+# ax8_1 = fig8.add_subplot(211)
+# ax8_2 = fig8.add_subplot(212)
+# ax8_1.plot(time_list_ma, temperatures, linewidth=2.0, color='black', label='Temperature at CMB')
+# ax8_2.plot(time_list_ma, pressures, linewidth=2.0, color='black', label='Pressure at CMB')
+# ax8_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax8_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax8_1.set_ylabel("Temeperature (K)")
+# ax8_2.set_ylabel("Pressure (GPa)")
+# ax8_1.grid()
+# ax8_2.grid()
+# ax8_0.spines['top'].set_color('none')
+# ax8_0.spines['bottom'].set_color('none')
+# ax8_0.spines['left'].set_color('none')
+# ax8_0.spines['right'].set_color('none')
+# ax8_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+# ax8_0.xaxis.labelpad = 20
+# ax8_0.yaxis.labelpad = 20
+# ax8_0.set_xlabel("Time (Ma)")
+# ax8_0.set_title("Adiabatic Temperature and Hydrostatic Pressure at Vesta CMB Over Time")
+# ax8_1.legend(loc='upper right')
+# ax8_2.legend(loc='upper right')
 
 fig9 = plt.figure()
 ax9_1 = fig9.add_subplot(111)
-ax9_1.plot(time_list_ma, cmb_d, linewidth=2.0, color='black', label="D at CMB")
+for index, i in enumerate(fO2):
+    ax9_1.plot(time_list_ma, cmbd_fO2[index], linewidth=2.0, label='fO$_2$ = IW{}'.format(i))
 ax9_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax9_1.grid()
-ax9_1.set_title("Metal-Silicate Partitioning Coefficient (D) at Vesta CMB Over Time")
+ax9_1.set_title("Metal-Silicate Partitioning Coefficient (log(D)) at Vesta CMB Over Time")
 ax9_1.set_xlabel("Time (Ma)")
-ax9_1.set_ylabel("D")
+ax9_1.set_ylabel("log(D)")
+ax9_1.legend(loc='center right')
+# ax9_1.set_yscale('log')
 
 # fig9 = plt.figure()
 # ax9_0 = fig9.add_subplot(111)
@@ -758,38 +724,157 @@ ax9_1.set_ylabel("D")
 # ax9_0.legend(loc='lower right')
 
 fig10 = plt.figure()
-ax10 = fig10.add_subplot(111)
-ax10.plot(time_list_ma[1:], bulk_d_182w, linewidth=2.0, label="$^{182}$W")
-ax10.plot(time_list_ma[1:], bulk_d_184w, linewidth=2.0, label="$^{184}$W")
-ax10.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax10.set_title("Bulk Partition Coefficient (D) on Vesta Over Time")
-ax10.set_xlabel("Time (Ma)")
-ax10.set_ylabel("D")
-ax10.grid()
-ax10.legend(loc='upper left')
+ax10_0 = fig10.add_subplot(111)
+ax10_1 = fig10.add_subplot(211)
+ax10_2 = fig10.add_subplot(212)
+for index, i in enumerate(fO2):
+    ax10_1.plot(time_list_ma[1:], bulk_d_w182_list[index], linewidth=2.0, label='fO$_2$ = IW{}'.format(i))
+    ax10_2.plot(time_list_ma[1:], bulk_d_w184_list[index], linewidth=2.0, label='fO$_2$ = IW{}'.format(i))
+ax10_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax10_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax10_0.spines['top'].set_color('none')
+ax10_0.spines['bottom'].set_color('none')
+ax10_0.spines['left'].set_color('none')
+ax10_0.spines['right'].set_color('none')
+ax10_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax10_0.xaxis.labelpad = 20
+ax10_0.yaxis.labelpad = 20
+ax10_0.set_title("Bulk Partition Coefficient (D) on Vesta Over Time")
+ax10_0.set_xlabel("Time (Ma)")
+ax10_0.set_ylabel("D")
+ax10_1.grid()
+ax10_2.grid()
+ax10_1.legend(loc='upper right')
+ax10_2.legend(loc='lower right')
+# ax10_1.set_yscale('log')
+# ax10_2.set_yscale('log')
 
-fig11 = plt.figure()
-ax11_0 = fig11.add_subplot(111)
-ax11_1 = fig11.add_subplot(211)
-ax11_2 = fig11.add_subplot(212)
-ax11_1.plot(time_list_ma, mass_core, linewidth=2.0, color='black', label='Core Mass')
-ax11_2.plot(time_list_ma, mantle_mass, linewidth=2.0, color='black', label='Mantle Mass')
-ax11_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax11_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax11_0.spines['top'].set_color('none')
-ax11_0.spines['bottom'].set_color('none')
-ax11_0.spines['left'].set_color('none')
-ax11_0.spines['right'].set_color('none')
-ax11_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
-ax11_0.xaxis.labelpad = 20
-ax11_0.yaxis.labelpad = 20
-ax11_0.set_title("Core and Mantle Mass Evolution on Vesta Through Time")
-ax11_0.set_xlabel("Time (Ma)")
-ax11_0.set_ylabel("Mass (kg)")
-ax11_1.grid()
-ax11_2.grid()
-ax11_1.legend(loc='center right')
-ax11_2.legend(loc='center right')
+
+# fig11 = plt.figure()
+# ax11_0 = fig11.add_subplot(111)
+# ax11_1 = fig11.add_subplot(211)
+# ax11_2 = fig11.add_subplot(212)
+# ax11_1.plot(time_list_ma, mass_core, linewidth=2.0, color='black', label='Core Mass')
+# ax11_2.plot(time_list_ma, mantle_mass, linewidth=2.0, color='black', label='Mantle Mass')
+# ax11_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax11_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax11_0.spines['top'].set_color('none')
+# ax11_0.spines['bottom'].set_color('none')
+# ax11_0.spines['left'].set_color('none')
+# ax11_0.spines['right'].set_color('none')
+# ax11_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+# ax11_0.xaxis.labelpad = 20
+# ax11_0.yaxis.labelpad = 20
+# ax11_0.set_title("Core and Mantle Mass Evolution on Vesta Through Time")
+# ax11_0.set_xlabel("Time (Ma)")
+# ax11_0.set_ylabel("Mass (kg)")
+# ax11_1.grid()
+# ax11_2.grid()
+# ax11_1.legend(loc='center right')
+# ax11_2.legend(loc='center right')
+
+
+
+fig12 = plt.figure()
+ax12_0 = fig12.add_subplot(111)
+ax12_1 = fig12.add_subplot(211)
+ax12_2 = fig12.add_subplot(212)
+ax12_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax12_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax12_1.fill_between(time_list_ma, bulk_mantle_mass_182w_list[0], bulk_mantle_mass_182w_list[1], label='Oxidizing Model')
+ax12_1.fill_between(time_list_ma, bulk_mantle_mass_182w_list[2], bulk_mantle_mass_182w_list[3], label='Reducing Model')
+ax12_2.fill_between(time_list_ma, bulk_mantle_mass_184w_list[0], bulk_mantle_mass_184w_list[1], label='Oxidizing Model')
+ax12_2.fill_between(time_list_ma, bulk_mantle_mass_184w_list[2], bulk_mantle_mass_184w_list[3], label='Reducing Model')
+# ax12_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_182w_list[0]], [log10(i) for i in bulk_mantle_mass_182w_list[1]], label='Oxidizing Model')
+# ax12_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_182w_list[2]], [log10(i) for i in bulk_mantle_mass_182w_list[3]], label='Reducing Model')
+# ax12_2.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[0]], [log10(i) for i in bulk_mantle_mass_184w_list[1]], label='Oxidizing Model')
+# ax12_2.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[2]], [log10(i) for i in bulk_mantle_mass_184w_list[3]], label='Reducing Model')
+ax12_1.grid()
+ax12_2.grid()
+ax12_1.legend(loc='lower right')
+ax12_2.legend(loc='lower right')
+ax12_0.spines['top'].set_color('none')
+ax12_0.spines['bottom'].set_color('none')
+ax12_0.spines['left'].set_color('none')
+ax12_0.spines['right'].set_color('none')
+ax12_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax12_0.xaxis.labelpad = 20
+ax12_0.yaxis.labelpad = 20
+ax12_0.set_xlabel("Time (Ma)")
+ax12_0.set_ylabel("Mass (kg)")
+ax12_0.set_title("$^{182}$W Mass on Vesta over Time")
+
+fig13 = plt.figure()
+ax13_0 = fig13.add_subplot(111)
+ax13_1 = fig13.add_subplot(211)
+ax13_2 = fig13.add_subplot(212)
+ax13_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax13_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax13_1.fill_between(time_list_ma, bulk_mantle_mass_184w_list[0], bulk_mantle_mass_184w_list[1], label='Oxidizing Model')
+ax13_1.fill_between(time_list_ma, bulk_mantle_mass_184w_list[2], bulk_mantle_mass_184w_list[3], label='Reducing Model')
+ax13_2.fill_between(time_list_ma, bulk_core_mass_184w_list[0], bulk_core_mass_184w_list[1], label='Oxidizing Model')
+ax13_2.fill_between(time_list_ma, bulk_core_mass_184w_list[2], bulk_core_mass_184w_list[3], label='Reducing Model')
+# ax13_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[0]], [log10(i) for i in bulk_mantle_mass_184w_list[1]], label='Oxidizing Model')
+# ax13_1.fill_between(time_list_ma, [log10(i) for i in bulk_mantle_mass_184w_list[2]], [log10(i) for i in bulk_mantle_mass_184w_list[3]], label='Reducing Model')
+# ax13_2.fill_between(time_list_ma, [log10(i) for i in bulk_core_mass_184w_list[0]], [log10(i) for i in bulk_core_mass_184w_list[1]], label='Oxidizing Model')
+# ax13_2.fill_between(time_list_ma, [log10(i) for i in bulk_core_mass_184w_list[2]], [log10(i) for i in bulk_core_mass_184w_list[3]], label='Reducing Model')
+ax13_1.grid()
+ax13_2.grid()
+ax13_0.spines['top'].set_color('none')
+ax13_0.spines['bottom'].set_color('none')
+ax13_0.spines['left'].set_color('none')
+ax13_0.spines['right'].set_color('none')
+ax13_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax13_0.xaxis.labelpad = 20
+ax13_0.yaxis.labelpad = 20
+ax13_0.set_xlabel("Time (Ma)")
+ax13_0.set_ylabel("Mass (kg)")
+ax13_0.set_title("$^{184}$W Mass on Vesta over Time")
+ax13_1.legend(loc='upper right')
+ax13_2.legend(loc='lower right')
+
+fig14 = plt.figure()
+ax14_1 = fig14.add_subplot(111)
+ax14_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax14_1.fill_between(time_list_ma, cmbd_fO2[0], cmbd_fO2[1], label='Oxidizing Model')
+ax14_1.fill_between(time_list_ma, cmbd_fO2[2], cmbd_fO2[3], label='Reducing Model')
+ax14_1.grid()
+ax14_1.set_title("Metal-Silicate Partitioning Coefficient (D)) at Vesta CMB Over Time")
+ax14_1.set_xlabel("Time (Ma)")
+ax14_1.set_ylabel("D")
+ax14_1.legend(loc='center right')
+# ax14_1.set_yscale('log')
+
+fig15 = plt.figure()
+ax15_0 = fig15.add_subplot(111)
+ax15_1 = fig15.add_subplot(211)
+ax15_2 = fig15.add_subplot(212)
+ax15_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax15_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+# ax15_1.fill_between(time_list_ma[1:], bulk_d_w182_list[0], bulk_d_w182_list[1], label='Oxidizing Model')
+# ax15_1.fill_between(time_list_ma[1:], bulk_d_w182_list[2], bulk_d_w182_list[3], label='Reducing Model')
+# ax15_2.fill_between(time_list_ma[1:], bulk_d_w184_list[0], bulk_d_w184_list[1], label='Oxidizing Model')
+# ax15_2.fill_between(time_list_ma[1:], bulk_d_w184_list[2], bulk_d_w184_list[3], label='Reducing Model')
+ax15_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w182_list[0]], [log10(i) for i in bulk_d_w182_list[1]], label='Oxidizing Model')
+ax15_1.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w182_list[2]], [log10(i) for i in bulk_d_w182_list[3]], label='Reducing Model')
+ax15_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w184_list[0]], [log10(i) for i in bulk_d_w184_list[1]], label='Oxidizing Model')
+ax15_2.fill_between(time_list_ma[1:], [log10(i) for i in bulk_d_w184_list[2]], [log10(i) for i in bulk_d_w184_list[3]], label='Reducing Model')
+ax15_0.spines['top'].set_color('none')
+ax15_0.spines['bottom'].set_color('none')
+ax15_0.spines['left'].set_color('none')
+ax15_0.spines['right'].set_color('none')
+ax15_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax15_0.xaxis.labelpad = 20
+ax15_0.yaxis.labelpad = 20
+ax15_0.set_title("Bulk Partition Coefficient (D) on Vesta Over Time")
+ax15_0.set_xlabel("Time (Ma)")
+ax15_0.set_ylabel("D")
+ax15_1.grid()
+ax15_2.grid()
+ax15_1.legend(loc='upper right')
+ax15_2.legend(loc='lower right')
+# ax15_1.set_yscale('log')
+# ax15_2.set_yscale('log')
 
 
 plt.show()
