@@ -54,9 +54,8 @@ hf_rel_at_5My = hf_decay[My_5_index]
 al_rel_at_5My = al_decay[My_5_index]
 fe_rel_at_5My = fe_decay[My_5_index]
 
-print(1 - hf_rel_at_5My, 1 - al_rel_at_5My, 1 - fe_rel_at_5My)
-print(hf_rel_at_5My, al_rel_at_5My / original_al, fe_rel_at_5My / original_fe)
 
+print(1 - hf_decay[My_5_index], w_abundance[My_5_index])
 
 hf_at_5 = hf_decay[My_5_index]
 al_at_5 = al_decay[My_5_index]
@@ -64,14 +63,14 @@ fe_at_5 = fe_decay[My_5_index]
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(time_list, hf_decay, linewidth=2.0, label='182Hf (hl = 8.9 * 10^6 y)')
-ax.plot(time_list, al_decay, linewidth=2.0, label='26Al (hl = 7.17 * 10^5 y)')
-ax.plot(time_list, fe_decay, linewidth=2.0, label='60Fe (hl = 2.6 * 10^6 y)')
-ax.plot(time_list, w_abundance, linewidth=2.0, linestyle="--", label="182W (stable)")
-ax.axvspan(0, 5, alpha=0.2, color='red')
-ax.set_xlabel("Time (My)")
-ax.set_ylabel("Relative Isotope Abundance (remaining/original)")
-ax.set_title("Isotope Decay")
+ax.plot(time_list, [i * 100 for i in hf_decay], color='black', linewidth=2.0, label='$^{182}$Hf')
+ax.plot(time_list, [i * 100 for i in al_decay], linewidth=2.0, label='$^{26}$Al')
+ax.plot(time_list, [i * 100 for i in fe_decay], linewidth=2.0, label='$^{60}$Fe')
+ax.plot(time_list, [i * 100 for i in w_abundance], color='black', linewidth=2.0, linestyle="--", label="$^{182}$W")
+ax.axvspan(0, 5, alpha=0.2, color='red', label='Core Formation Period')
+ax.set_xlabel("Time (Ma)")
+ax.set_ylabel("Relative Isotope Abundance (%)")
+ax.set_title("Isotope Decay over Time")
 ax.legend(loc='center right')
 minorLocator = MultipleLocator((timestep * 5) / 10**6)
 ax.xaxis.set_minor_locator(minorLocator)
