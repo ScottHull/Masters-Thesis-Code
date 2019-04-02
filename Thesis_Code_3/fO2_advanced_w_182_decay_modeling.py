@@ -448,10 +448,10 @@ radius_vesta_core = 113 * 1000
 volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
 mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
-initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
-initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664]
-# initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425, 16.584556, 16.4539]
-# initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664, 23.87737, 20.0194]
+# initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
+# initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664]
+initial_hf182_conc = [16.4539, 16.5605, 16.57299, 16.58399, 16.584425, 16.584556]
+initial_conc_w184 = [20.0194, 23.29356, 23.47345, 23.85845, 23.866664, 23.87737]
 # terrestrial_standard = 0.864900  # Kleine et al 2017
 terrestrial_standard = 0.864680  # Kleine et al 2004
 time_list = list(np.arange(0, inf_time + timestep, timestep))
@@ -460,8 +460,8 @@ core_formation_max_time_index = time_list.index(core_formation_max_time)
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-fO2 = [-0.8, -1.10, -2.25, -2.45]
-# fO2 = [-0.8, -1.10, -2.25, -2.45, -3.5, 0.5]
+# fO2 = [-0.8, -1.10, -2.25, -2.45]
+fO2 = [0.5, -0.8, -1.10, -2.25, -2.45, -3.5]
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
@@ -963,7 +963,7 @@ fig18 = plt.figure()
 fig19 = plt.figure()
 fig20 = plt.figure()
 ax18 = fig18.add_subplot(111)
-ax19= fig19.add_subplot(111)
+ax19 = fig19.add_subplot(111)
 ax20 = fig20.add_subplot(111)
 for index, i in enumerate(fO2):
     ax18.plot(time_list_ma[1:], core_w182_w184_ratios[index], label='fO$_2$ = IW{} (Core)'.format(i))
@@ -990,6 +990,16 @@ ax18.legend(loc='upper right')
 ax19.legend(loc='lower right')
 ax20.legend(loc='lower right')
 
+
+fig21 = plt.figure()
+ax21_1 = fig21.add_subplot(111)
+ax21_1.plot(list(reversed(fO2)), list(reversed(initial_hf182_conc)), linewidth=2.0, color='black', linestyle="-", label="$^{182}$Hf")
+ax21_1.plot(list(reversed(fO2)), list(reversed(initial_conc_w184)), linewidth=2.0, color='black', linestyle="--", label="$^{184}$W")
+ax21_1.set_title("Initial Bulk Concentration on Vesta")
+ax21_1.set_xlabel("$fO_2$")
+ax21_1.set_ylabel("Concentration (ppb)")
+ax21_1.grid()
+ax21_1.legend(loc='center left')
 
 
 plt.show()
