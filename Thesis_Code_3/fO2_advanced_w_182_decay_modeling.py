@@ -448,10 +448,10 @@ radius_vesta_core = 113 * 1000
 volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
 mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
-# initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
-# initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664]
-initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425, 16.584556, 16.4539]
-initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664, 23.87737, 20.0194]
+initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
+initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664]
+# initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425, 16.584556, 16.4539]
+# initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664, 23.87737, 20.0194]
 # terrestrial_standard = 0.864900  # Kleine et al 2017
 terrestrial_standard = 0.864680  # Kleine et al 2004
 time_list = list(np.arange(0, inf_time + timestep, timestep))
@@ -460,8 +460,8 @@ core_formation_max_time_index = time_list.index(core_formation_max_time)
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-# fO2 = [-0.8, -1.10, -2.25, -2.45]
-fO2 = [-0.8, -1.10, -2.25, -2.45, -3.5, 0.5]
+fO2 = [-0.8, -1.10, -2.25, -2.45]
+# fO2 = [-0.8, -1.10, -2.25, -2.45, -3.5, 0.5]
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
@@ -908,6 +908,8 @@ for index, i in enumerate(fO2):
     ax16_1.plot(time_list_ma[1:], core_w182_w184_ratios[index], label='fO$_2$ = IW{} (Core)'.format(i))
     ax16_2.plot(time_list_ma, mantle_w182_w184_ratios[index], label='fO$_2$ = IW{} (Mantle)'.format(i))
     ax16_3.plot(time_list_ma, bulk_w182_w184_ratios[index], label='fO$_2$ = IW{} (Bulk)'.format(i))
+ax16_2.axhline(avg_eucrite_w182_w184_ratio, color='black', linestyle="--", label='Avg. Eucrite')
+ax16_3.axhline(avg_eucrite_w182_w184_ratio, color='black', linestyle="--", label='Avg. Eucrite')
 ax16_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax16_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax16_3.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
@@ -956,6 +958,37 @@ ax17_0.set_ylabel("$\epsilon^{182}$W")
 ax17_1.legend(loc='upper right')
 ax17_2.legend(loc='lower right')
 ax17_3.legend(loc='lower right')
+
+fig18 = plt.figure()
+fig19 = plt.figure()
+fig20 = plt.figure()
+ax18 = fig18.add_subplot(111)
+ax19= fig19.add_subplot(111)
+ax20 = fig20.add_subplot(111)
+for index, i in enumerate(fO2):
+    ax18.plot(time_list_ma[1:], core_w182_w184_ratios[index], label='fO$_2$ = IW{} (Core)'.format(i))
+    ax19.plot(time_list_ma, mantle_w182_w184_ratios[index], label='fO$_2$ = IW{} (Mantle)'.format(i))
+    ax20.plot(time_list_ma, bulk_w182_w184_ratios[index], label='fO$_2$ = IW{} (Bulk)'.format(i))
+ax19.axhline(avg_eucrite_w182_w184_ratio, color='black', linestyle="--", label='Avg. Eucrite')
+ax20.axhline(avg_eucrite_w182_w184_ratio, color='black', linestyle="--", label='Avg. Eucrite')
+ax18.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax19.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax20.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax18.grid()
+ax19.grid()
+ax20.grid()
+ax18.set_title("$^{182}$W/$^{184}$W In Vesta Core Over Time")
+ax19.set_title("$^{182}$W/$^{184}$W In Vesta Mantle Over Time")
+ax20.set_title("$^{182}$W/$^{184}$W In Bulk Vesta Over Time")
+ax18.set_xlabel("Time (Ma)")
+ax18.set_ylabel("$^{182}$W/$^{184}$W")
+ax19.set_xlabel("Time (Ma)")
+ax19.set_ylabel("$^{182}$W/$^{184}$W")
+ax20.set_xlabel("Time (Ma)")
+ax20.set_ylabel("$^{182}$W/$^{184}$W")
+ax18.legend(loc='upper right')
+ax19.legend(loc='lower right')
+ax20.legend(loc='lower right')
 
 
 
