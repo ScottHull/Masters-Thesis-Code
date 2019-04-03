@@ -69,6 +69,7 @@ def recalcConcentration(predicted_d, original_moles_silicate, original_moles_met
     moles_objs = [original_moles_metal]
     verify_D = [concs_objs[0] / concs_mesh[0]]
     for index, d in enumerate(list(predicted_d)):
+        d = d * (density_metal / density_silicate)
         old_moles_obj = moles_objs[index - 1]
         old_moles_cell = moles_mesh[index - 1]
 
@@ -97,7 +98,8 @@ def recalcConcentration(predicted_d, original_moles_silicate, original_moles_met
 
 
 
-
+density_metal = 7800
+density_silicate = 3580
 droplet_radius = 0.0185
 earth_droplet_radius = 0.002957762
 diff_length = calcDiffusionLength(chem_diffusivity=10**-8, settling_velocity=0.2580697580112788, droplet_radius=droplet_radius)
@@ -110,6 +112,8 @@ earth_z_eq_1_thru_4 = 25
 earth_z_eq_5_thru_8 = 65
 earth_vol_mesh_1_thru_4 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_1_thru_4
 earth_vol_mesh_5_thru_8 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_5_thru_8
+
+vesta_magma_ocean_conc = 0
 
 vesta_1 = pd.read_csv("thesis_model_outputs/Vesta_1.csv")
 vesta_2 = pd.read_csv("thesis_model_outputs/Vesta_2.csv")
@@ -612,4 +616,4 @@ intersection = bisect.bisect_left(bulk_D_earth_6, 40)
 print(intersection)
 
 
-# plt.show()
+plt.show()
