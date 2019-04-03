@@ -492,7 +492,7 @@ ax9.legend(loc='upper left')
 
 fig10 = plt.figure()
 ax10 = fig10.add_subplot(111)
-ax10.plot(depth_vesta_2, [i * (10**-9) * vesta_droplet_mass for i in mass_conc_droplet_vesta_1_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax10.plot(depth_vesta_2, [i * (10**-9) * vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
 ax10.plot(depth_vesta_2, [i * (10**-9) * vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
 ax10.fill_between(depth_vesta_2, [i * (10**-9) * vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time1], [i * (10**-9) * vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time5], color='red', alpha=0.2)
 ax10.grid()
