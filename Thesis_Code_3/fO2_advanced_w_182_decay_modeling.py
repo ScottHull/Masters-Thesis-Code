@@ -490,6 +490,11 @@ bulk_w182_w184_ratios = []
 epsilon_core = []
 epsilon_mantle = []
 epsilon_bulk = []
+bulk_mantle_conc_w182_list = []
+bulk_core_conc_w182_list = []
+bulk_mantle_conc_w184_list = []
+bulk_core_conc_w184_list = []
+
 
 
 for index, i in enumerate(fO2):
@@ -561,12 +566,25 @@ for index, i in enumerate(fO2):
     epsilon_bulk.append(bulk_epsilon_w182_vesta)
     epsilon_core.append(core_epsilon_w182_vesta)
     epsilon_mantle.append(mantle_epsilon_w182_vesta)
+    bulk_mantle_conc_w182_list.append(mantle_bulk_conc_182w)
+    bulk_core_conc_w182_list.append(core_bulk_conc_182w)
+    bulk_mantle_conc_w184_list.append(mantle_bulk_conc_184w)
+    bulk_core_conc_w184_list.append(core_bulk_conc_184w)
 
     print("fO2: {}, 182W/184W: {}, Eucrite 182W/184W: {}\n".format(i, mantle_w182_w184_ratios[-1][-1], avg_eucrite_w182_w184_ratio))
 
 
-
-
+w182_mantle_dict = {'time': time_list[0:core_formation_max_time_index + 1]}
+w184_mantle_dict = {'time': time_list[0:core_formation_max_time_index + 1]}
+for index, i in enumerate(fO2):
+    temp_mantle_w182 = {'fO2_{}'.format(i): bulk_mantle_conc_w182_list[index][0:core_formation_max_time_index + 1]}
+    temp_mantle_w184 = {'fO2_{}'.format(i): bulk_mantle_conc_w184_list[index][0:core_formation_max_time_index + 1]}
+    w182_mantle_dict.update(temp_mantle_w182)
+    w184_mantle_dict.update(temp_mantle_w184)
+w182_df = pd.DataFrame(w182_mantle_dict)
+w184_df = pd.DataFrame(w184_mantle_dict)
+w182_df.to_csv("182w_mantle.csv")
+w184_df.to_csv("184w_mantle.csv")
 
 
 

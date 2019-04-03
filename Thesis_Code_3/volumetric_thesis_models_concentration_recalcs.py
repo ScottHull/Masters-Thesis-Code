@@ -58,8 +58,11 @@ def meltLengthWidth(diff_length, droplet_radius):
     length_width = (2 * droplet_radius) + (2 * diff_length)
     return length_width
 
-def recalcConcentration(predicted_d, original_moles_silicate, original_moles_metal, volume_mesh, radius_object):
+def recalcConcentration(predicted_d, original_mass_conc_silicate, original_mass_conc_metal, volume_mesh, radius_object,
+                        density_metal, density_melt, mass_droplet, mass_silicate, w_at_wt):
     volume_obj = (4 / 3) * pi * (radius_object ** 3)
+    original_moles_silicate = (original_mass_conc_silicate * (mass_silicate * 1000)) / w_at_wt
+    original_moles_metal = (original_mass_conc_metal * (mass_droplet * 1000)) / w_at_wt
 
     original_conc_silicate = original_moles_silicate / volume_mesh
     original_conc_metal = original_moles_metal / volume_obj
@@ -68,16 +71,18 @@ def recalcConcentration(predicted_d, original_moles_silicate, original_moles_met
     moles_mesh = [original_moles_silicate]
     moles_objs = [original_moles_metal]
     verify_D = [concs_objs[0] / concs_mesh[0]]
-    for index, d in enumerate(list(predicted_d)):
-        d = d * (density_metal / density_silicate)
+    mass_d_list = []
+    volume_d_list = []
+    for index, d_mole in enumerate(list(predicted_d)):
+        d_volume = (density_melt / density_melt) * d_mole
         old_moles_obj = moles_objs[index - 1]
         old_moles_cell = moles_mesh[index - 1]
 
         adj_matrix = (old_moles_cell /
                       (1 + (3 * volume_mesh * (
-                                  (4 * pi * (radius_object ** 3) * d) ** (-1)))))
+                                  (4 * pi * (radius_object ** 3) * d_volume) ** (-1)))))
         adj_object = (old_moles_obj /
-                      (1 + (4 * pi * (radius_object ** 3) * d) * (
+                      (1 + (4 * pi * (radius_object ** 3) * d_volume) * (
                                   (3 ** (-1)) * (volume_mesh**(-1)))))
         adj_moles = adj_matrix - adj_object
 
@@ -92,11 +97,12 @@ def recalcConcentration(predicted_d, original_moles_silicate, original_moles_met
         concs_mesh.append(new_mesh_conc)
         concs_objs.append(new_obj_conc)
         verify_D.append(check_D)
+        mass_d_list.append(d_mole)
+        volume_d_list.append(d_volume)
 
-    return concs_mesh, concs_objs, moles_mesh, moles_objs, verify_D
+    return concs_mesh, concs_objs, moles_mesh, moles_objs, mass_d_list, volume_d_list
 
 
-plt.rcParams.update({'font.size': 16})
 
 def calcRadMantle(mass_core, density_metal, radius_body):
     volume_core = mass_core / density_metal
@@ -159,515 +165,42 @@ def calcEpsilon182W(w182_at_time, w184_at_time, terretrial_standard):
     return epsilon
 
 
-def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_half_life, hf182_at_wt,
-              initial_hf182_conc, mass_vesta, mass_vesta_core, density_metal, density_melt, fO2,
-              temperature_surf, pressure_surf, radius_body, gravity, thermal_expansivity, heat_capacity):
-
-    core_frac_per_timestep = timestep / core_formation_max_time
-    decay_const = log(0.5) / hf182_half_life
-
-    fraction_core_accumulated = [0]
-    core_mass_added = [0]
-    mantle_mass_depleted = [0]
-    mass_core = [0]
-    mantle_mass = [mass_vesta]
-
-    initial_bulk_moles_w182 = (((initial_hf182_conc * (10**-9)) * mass_vesta) * 1000) / hf182_at_wt
-    initial_radius_mantle, initial_radius_core = calcRadMantle(mass_core=mass_core[0], density_metal=density_metal,
-                                                               radius_body=radius_body)
-    initial_temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
-                                           depth=radius_body, gravity=gravity,
-                                           heat_capacity=heat_capacity,
-                                           surface_temperature=temperature_surf)
-    initial_pressure = calcHydrostaticPressure(depth=radius_body, density_melt=density_melt, gravity=gravity,
-                                       surface_pressure=pressure_surf)
-    initial_dist_coeff = partition(pressure=initial_pressure, temperature=initial_temperature, deltaIW=fO2)
-
-    moles_182hf = [initial_bulk_moles_w182]
-    bulk_mass_182w = [0]
-    bulk_conc_182w = [0]
-    bulk_mass_182w_added = [0]
-    bulk_conc_182w_added = [0]
-    mantle_conc_182w_added = [0]
-    core_conc_182w_added = [0]
-    core_mass_182w_added = [0]
-    mantle_mass_182w_added = [0]
-    bulk_core_mass_182w = [0]
-    bulk_mantle_mass_182w = [0]
-    bulk_mass_182w_check = [0]
-    core_bulk_conc_182w = [0]
-    mantle_bulk_conc_182w = [0]
-    radius_mantle = [initial_radius_mantle]
-    radius_core = [initial_radius_core]
-    cmb_d = [initial_dist_coeff]
-    temperatures = [initial_temperature]
-    pressures = [initial_pressure]
-
-    max_modeling_time_range = list(np.arange(0, inf_time + timestep, timestep))
-
-    for time_index, time in enumerate(max_modeling_time_range):
-        if not time_index == 0:
-            if time <= core_formation_max_time:
-                fraction_core_bulk = fraction_core_accumulated[-1] + core_frac_per_timestep
-                mass_core_at_time = fraction_core_bulk * mass_vesta_core
-                mass_core_added_at_time = mass_core_at_time - mass_core[-1]
-                mass_mantle_at_time = mass_vesta - mass_core_at_time
-                mass_mantle_depleted_at_time = mantle_mass[-1] - mass_mantle_at_time
-                radius_mantle_at_time, radius_core_at_time = calcRadMantle(mass_core=mass_core_at_time,
-                                                                           density_metal=density_metal,
-                                                                           radius_body=radius_body)
-                temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
-                                                       depth=radius_mantle_at_time, gravity=gravity,
-                                                       heat_capacity=heat_capacity,
-                                                       surface_temperature=temperature_surf)
-                pressure = calcHydrostaticPressure(depth=radius_mantle_at_time, density_melt=density_melt, gravity=gravity,
-                                                   surface_pressure=pressure_surf)
-                partition_coeff = partition(pressure=pressure, temperature=temperature, deltaIW=fO2)
-
-
-                radius_mantle.append(radius_mantle_at_time)
-                radius_core.append(radius_core_at_time)
-                temperatures.append(temperature)
-                pressures.append(pressure)
-                cmb_d.append(partition_coeff)
-                fraction_core_accumulated.append(fraction_core_bulk)
-                core_mass_added.append(mass_core_added_at_time)
-                mantle_mass.append(mass_mantle_at_time)
-                mantle_mass_depleted.append(mass_mantle_depleted_at_time)
-                mass_core.append(mass_core[-1] + mass_core_added_at_time)
-
-                moles_182hf_remaining = moles_182hf[-1] * exp(
-                    (time - max_modeling_time_range[time_index - 1]) * decay_const)
-                bulk_mass_w182_at_time = (moles_182hf[0] - moles_182hf_remaining) * (w182_at_wt / 1000)  # kg
-                bulk_conc_w182_at_time = (bulk_mass_w182_at_time / mass_vesta) * (10 ** 9)
-                bulk_mass_w182_at_time_added = bulk_mass_w182_at_time - bulk_mass_182w[-1]
-                bulk_conc_w182_at_time_added = bulk_conc_w182_at_time - bulk_conc_182w[-1]
-
-                mantle_conc_182w_at_time_added = bulk_conc_w182_at_time_added / (partition_coeff + 1)
-
-                bulk_mass_182w_added.append(bulk_mass_w182_at_time_added)
-                bulk_conc_182w_added.append(bulk_conc_w182_at_time_added)
-                mantle_conc_182w_added.append(mantle_conc_182w_at_time_added)
-
-                core_conc_w182_at_time_added = bulk_conc_w182_at_time_added - mantle_conc_182w_at_time_added
-                core_mass_w182_at_time_added = (core_conc_w182_at_time_added * (10 ** -9)) * mass_core_added_at_time
-                mass_mantle_w182_at_time_added = bulk_mass_w182_at_time_added - core_mass_w182_at_time_added
-
-                core_conc_182w_added.append(core_conc_w182_at_time_added)
-                core_mass_182w_added.append(core_mass_w182_at_time_added)
-                mantle_mass_182w_added.append(mass_mantle_w182_at_time_added)
-
-                mantle_bulk_mass_182w_at_time = sum(mantle_mass_182w_added)
-                core_bulk_mass_182w_at_time = sum(core_mass_182w_added)
-                mantle_bulk_conc_182w_at_time = (mantle_bulk_mass_182w_at_time / mass_mantle_at_time) * (10 ** 9)
-                core_bulk_conc_182w_at_time = (core_bulk_mass_182w_at_time / mass_core_at_time) * (10 ** 9)
-                bulk_conc_182w_at_time = ((mantle_bulk_mass_182w_at_time + core_bulk_mass_182w_at_time) / mass_vesta) * (
-                        10 ** 9)
-
-                moles_182hf.append(moles_182hf_remaining)
-                bulk_core_mass_182w.append(core_bulk_mass_182w_at_time)
-                bulk_mantle_mass_182w.append(mantle_bulk_mass_182w_at_time)
-                bulk_mass_182w_check.append(mantle_bulk_mass_182w_at_time + core_bulk_mass_182w_at_time)
-                mantle_bulk_conc_182w.append(mantle_bulk_conc_182w_at_time)
-                core_bulk_conc_182w.append(core_bulk_conc_182w_at_time)
-                bulk_conc_182w.append(bulk_conc_182w_at_time)
-                bulk_mass_182w.append(bulk_mass_w182_at_time)
-
-
-
-            else:
-                fraction_core_bulk = 1
-                mass_core_at_time = fraction_core_bulk * mass_vesta_core
-                mass_core_added_at_time = mass_core_at_time - mass_core[-1]
-                mass_mantle_at_time = mass_vesta - mass_core_at_time
-                mass_mantle_depleted_at_time = mantle_mass[-1] - mass_mantle_at_time
-
-                radius_mantle_at_time, radius_core_at_time = calcRadMantle(mass_core=mass_core_at_time,
-                                                                           density_metal=density_metal,
-                                                                           radius_body=radius_body)
-                temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
-                                                       depth=radius_mantle_at_time, gravity=gravity,
-                                                       heat_capacity=heat_capacity,
-                                                       surface_temperature=temperature_surf)
-                pressure = calcHydrostaticPressure(depth=radius_mantle_at_time, density_melt=density_melt,
-                                                   gravity=gravity,
-                                                   surface_pressure=pressure_surf)
-                partition_coeff = partition(pressure=pressure, temperature=temperature, deltaIW=fO2)
-
-                radius_mantle.append(radius_mantle_at_time)
-                radius_core.append(radius_core_at_time)
-                cmb_d.append(partition_coeff)
-                temperatures.append(temperature)
-                pressures.append(pressure)
-
-                fraction_core_accumulated.append(fraction_core_bulk)
-                core_mass_added.append(mass_core_added_at_time)
-                mantle_mass.append(mass_mantle_at_time)
-                mantle_mass_depleted.append(mass_mantle_depleted_at_time)
-                mass_core.append(mass_core[-1] + mass_core_added_at_time)
-
-                moles_182hf_remaining = moles_182hf[-1] * exp(
-                    (time - max_modeling_time_range[time_index - 1]) * decay_const)
-                bulk_mass_w182_at_time = (moles_182hf[0] - moles_182hf_remaining) * (w182_at_wt / 1000)  # kg
-                bulk_conc_w182_at_time = (bulk_mass_w182_at_time / mass_vesta) * (10 ** 9)
-                bulk_mass_w182_at_time_added = bulk_mass_w182_at_time - bulk_mass_182w[-1]
-                bulk_conc_w182_at_time_added = bulk_conc_w182_at_time - bulk_conc_182w[-1]
-
-                mantle_conc_182w_at_time_added = bulk_conc_w182_at_time_added / (partition_coeff + 1)
-
-                bulk_mass_182w_added.append(bulk_mass_w182_at_time_added)
-                bulk_conc_182w_added.append(bulk_conc_w182_at_time_added)
-                mantle_conc_182w_added.append(mantle_conc_182w_at_time_added)
-
-                core_conc_w182_at_time_added = bulk_conc_w182_at_time_added - mantle_conc_182w_at_time_added
-                core_mass_w182_at_time_added = (core_conc_w182_at_time_added * (10 ** -9)) * mass_core_added_at_time
-                mass_mantle_w182_at_time_added = bulk_mass_w182_at_time_added - core_mass_w182_at_time_added
-
-                core_conc_182w_added.append(core_conc_w182_at_time_added)
-                core_mass_182w_added.append(core_mass_w182_at_time_added)
-                mantle_mass_182w_added.append(mass_mantle_w182_at_time_added)
-
-                mantle_bulk_mass_182w_at_time = sum(mantle_mass_182w_added)
-                core_bulk_mass_182w_at_time = sum(core_mass_182w_added)
-                mantle_bulk_conc_182w_at_time = (mantle_bulk_mass_182w_at_time / mass_mantle_at_time) * (10 ** 9)
-                core_bulk_conc_182w_at_time = (core_bulk_mass_182w_at_time / mass_core_at_time) * (10 ** 9)
-                bulk_conc_182w_at_time = ((
-                                                      mantle_bulk_mass_182w_at_time + core_bulk_mass_182w_at_time) / mass_vesta) * (
-                                                 10 ** 9)
-
-                moles_182hf.append(moles_182hf_remaining)
-                bulk_core_mass_182w.append(core_bulk_mass_182w_at_time)
-                bulk_mantle_mass_182w.append(mantle_bulk_mass_182w_at_time)
-                bulk_mass_182w_check.append(mantle_bulk_mass_182w_at_time + core_bulk_mass_182w_at_time)
-                mantle_bulk_conc_182w.append(mantle_bulk_conc_182w_at_time)
-                core_bulk_conc_182w.append(core_bulk_conc_182w_at_time)
-                bulk_conc_182w.append(bulk_conc_182w_at_time)
-                bulk_mass_182w.append(bulk_mass_w182_at_time)
-
-    bulk_moles_182w_added_at_time = [i / w182_at_wt for i in bulk_mass_182w_added]
-    mantle_moles_182w_added_at_time = [i / w182_at_wt for i in mantle_mass_182w_added]
-    core_moles_182w_added_at_time = [i / w182_at_wt for i in core_mass_182w_added]
-    bulk_moles_182w = [i / w182_at_wt for i in bulk_mass_182w]
-    core_bulk_moles_182w = [i / w182_at_wt for i in bulk_core_mass_182w]
-    mantle_moles_182w = [i / w182_at_wt for i in bulk_mantle_mass_182w]
-
-
-
-    return fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
-           bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
-           core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
-           bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w, radius_mantle, \
-           radius_core, cmb_d, temperatures, pressures, bulk_moles_182w_added_at_time, mantle_moles_182w_added_at_time, \
-           core_moles_182w_added_at_time, bulk_moles_182w, core_bulk_moles_182w, mantle_moles_182w
-
-
-
-def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max_time, inf_time, timestep,
-              density_metal, density_melt, fO2, temperature_surf, pressure_surf, radius_body, gravity,
-              thermal_expansivity, heat_capacity, w184_at_wt):
-
-    core_frac_per_timestep = timestep / core_formation_max_time
-    bulk_mass_w184 = (initial_conc_w184 * (10**-9)) * mass_vesta
-    bulk_conc_w184 = (bulk_mass_w184 / mass_vesta) * (10**9)
-
-    fraction_core_accumulated = [0]
-    core_mass_added = [0]
-    mantle_mass_depleted = [0]
-    mass_core = [0]
-    mantle_mass = [mass_vesta]
-
-    initial_radius_mantle, initial_radius_core = calcRadMantle(mass_core=mass_core[0], density_metal=density_metal,
-                                                               radius_body=radius_body)
-    initial_temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
-                                                   depth=radius_body, gravity=gravity,
-                                                   heat_capacity=heat_capacity,
-                                                   surface_temperature=temperature_surf)
-    initial_pressure = calcHydrostaticPressure(depth=radius_body, density_melt=density_melt, gravity=gravity,
-                                               surface_pressure=pressure_surf)
-    initial_dist_coeff = partition(pressure=initial_pressure, temperature=initial_temperature, deltaIW=fO2)
-
-    core_mass_w184_added = [0]
-    current_mantle_mass_w184 = [bulk_mass_w184]
-    core_mass_w184_at_time = [0]
-    mantle_mass_w184_at_time = [bulk_mass_w184]
-    bulk_mass_w184_check = [bulk_mass_w184]
-    core_bulk_conc_184w = [0]
-    mantle_bulk_conc_184w = [initial_conc_w184]
-    bulk_conc_184w_at_time = [bulk_conc_w184]
-    bulk_mass_w184_at_time = [bulk_mass_w184]
-    radius_mantle = [initial_radius_mantle]
-    radius_core = [initial_radius_core]
-    cmb_d = [initial_dist_coeff]
-    temperatures = [initial_temperature]
-    pressures = [initial_pressure]
-
-    max_modeling_time_range = list(np.arange(0, inf_time + timestep, timestep))
-
-    for time_index, time in enumerate(max_modeling_time_range):
-        if not time_index == 0:
-            if time < core_formation_max_time:
-                fraction_core_bulk = fraction_core_accumulated[-1] + core_frac_per_timestep
-                mass_core_at_time = fraction_core_bulk * mass_vesta_core
-                mass_core_added_at_time = mass_core_at_time - mass_core[-1]
-                mass_mantle_at_time = mass_vesta - mass_core_at_time
-                mass_mantle_depleted_at_time = mantle_mass[-1] - mass_mantle_at_time
-
-                radius_mantle_at_time, radius_core_at_time = calcRadMantle(mass_core=mass_core_at_time,
-                                                                           density_metal=density_metal,
-                                                                           radius_body=radius_body)
-                temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
-                                                       depth=radius_mantle_at_time, gravity=gravity,
-                                                       heat_capacity=heat_capacity,
-                                                       surface_temperature=temperature_surf)
-                pressure = calcHydrostaticPressure(depth=radius_mantle_at_time, density_melt=density_melt,
-                                                   gravity=gravity,
-                                                   surface_pressure=pressure_surf)
-                partition_coeff = partition(pressure=pressure, temperature=temperature, deltaIW=fO2)
-
-                radius_mantle.append(radius_mantle_at_time)
-                radius_core.append(radius_core_at_time)
-                cmb_d.append(partition_coeff)
-                temperatures.append(temperature)
-                pressures.append(pressure)
-
-
-                fraction_core_accumulated.append(fraction_core_bulk)
-                core_mass_added.append(mass_core_added_at_time)
-                mantle_mass.append(mass_mantle_at_time)
-                mantle_mass_depleted.append(mass_mantle_depleted_at_time)
-                mass_core.append(mass_core_at_time)
-
-                mantle_conc_w184_at_time = bulk_conc_w184 / (partition_coeff + 1)
-                core_conc_w184_at_time = bulk_conc_w184 - mantle_conc_w184_at_time
-                core_mass_w184_added_at_time = (core_conc_w184_at_time * (10**-9)) * mass_core_added_at_time
-                mantle_mass_w184_remaining_at_time = current_mantle_mass_w184[-1] - core_mass_w184_added_at_time
-                bulk_core_mass_w184_at_time = sum(core_mass_w184_added) + core_mass_w184_added_at_time
-                bulk_mass_w184_check_at_time = mantle_mass_w184_remaining_at_time + bulk_core_mass_w184_at_time
-                core_bulk_conc_w184_at_time = (bulk_core_mass_w184_at_time / mass_core_at_time) * (10**9)
-                mantle_bulk_conc_184w_at_time = (mantle_mass_w184_remaining_at_time / mass_mantle_at_time) * (10**9)
-
-                current_mantle_mass_w184.append(mantle_mass_w184_remaining_at_time)
-                core_mass_w184_added.append(core_mass_w184_added_at_time)
-                core_mass_w184_at_time.append(bulk_core_mass_w184_at_time)
-                mantle_mass_w184_at_time.append(mantle_mass_w184_remaining_at_time)
-                bulk_mass_w184_check.append(bulk_core_mass_w184_at_time + mantle_mass_w184_remaining_at_time)
-                core_bulk_conc_184w.append(core_bulk_conc_w184_at_time)
-                mantle_bulk_conc_184w.append(mantle_bulk_conc_184w_at_time)
-                bulk_conc_184w_at_time.append(bulk_conc_w184)
-                bulk_mass_w184_at_time.append(bulk_mass_w184)
-
-            else:
-                fraction_core_bulk = 1
-                mass_core_at_time = fraction_core_bulk * mass_vesta_core
-                mass_core_added_at_time = mass_core_at_time - mass_core[-1]
-                mass_mantle_at_time = mass_vesta - mass_core_at_time
-                mass_mantle_depleted_at_time = mantle_mass[-1] - mass_mantle_at_time
-
-                radius_mantle_at_time, radius_core_at_time = calcRadMantle(mass_core=mass_core_at_time,
-                                                                           density_metal=density_metal,
-                                                                           radius_body=radius_body)
-                temperature = calcAdiabaticTemperature(thermal_expansivity=thermal_expansivity,
-                                                       depth=radius_mantle_at_time, gravity=gravity,
-                                                       heat_capacity=heat_capacity,
-                                                       surface_temperature=temperature_surf)
-                pressure = calcHydrostaticPressure(depth=radius_mantle_at_time, density_melt=density_melt,
-                                                   gravity=gravity,
-                                                   surface_pressure=pressure_surf)
-                partition_coeff = partition(pressure=pressure, temperature=temperature, deltaIW=fO2)
-
-                radius_mantle.append(radius_mantle_at_time)
-                radius_core.append(radius_core_at_time)
-                cmb_d.append(partition_coeff)
-                temperatures.append(temperature)
-                pressures.append(pressure)
-
-                fraction_core_accumulated.append(fraction_core_bulk)
-                core_mass_added.append(mass_core_added_at_time)
-                mantle_mass.append(mass_mantle_at_time)
-                mantle_mass_depleted.append(mass_mantle_depleted_at_time)
-                mass_core.append(mass_core_at_time)
-
-                mantle_conc_w184_at_time = bulk_conc_w184 / (partition_coeff + 1)
-                core_conc_w184_at_time = bulk_conc_w184 - mantle_conc_w184_at_time
-                core_mass_w184_added_at_time = (core_conc_w184_at_time * (10 ** -9)) * mass_core_added_at_time
-                mantle_mass_w184_remaining_at_time = current_mantle_mass_w184[-1] - core_mass_w184_added_at_time
-                bulk_core_mass_w184_at_time = sum(core_mass_w184_added) + core_mass_w184_added_at_time
-                bulk_mass_w184_check_at_time = mantle_mass_w184_remaining_at_time + bulk_core_mass_w184_at_time
-                core_bulk_conc_w184_at_time = (bulk_core_mass_w184_at_time / mass_core_at_time) * (10 ** 9)
-                mantle_bulk_conc_184w_at_time = (mantle_mass_w184_remaining_at_time / mass_mantle_at_time) * (10 ** 9)
-
-                current_mantle_mass_w184.append(mantle_mass_w184_remaining_at_time)
-                core_mass_w184_added.append(core_mass_w184_added_at_time)
-                core_mass_w184_at_time.append(bulk_core_mass_w184_at_time)
-                mantle_mass_w184_at_time.append(mantle_mass_w184_remaining_at_time)
-                bulk_mass_w184_check.append(bulk_core_mass_w184_at_time + mantle_mass_w184_remaining_at_time)
-                core_bulk_conc_184w.append(core_bulk_conc_w184_at_time)
-                mantle_bulk_conc_184w.append(mantle_bulk_conc_184w_at_time)
-                bulk_conc_184w_at_time.append(bulk_conc_w184)
-                bulk_mass_w184_at_time.append(bulk_mass_w184)
-
-    bulk_moles_182w_added_at_time = [i / w182_at_wt for i in bulk_mass_182w_added]
-    mantle_moles_184w_remaining_at_time = [i / w184_at_wt for i in mantle_mass_w184_at_time]
-    core_moles_184w_added_at_time = [i / w184_at_wt for i in core_mass_w184_added]
-    bulk_moles_184w = [i / w184_at_wt for i in bulk_mass_w184_at_time]
-    core_bulk_moles_184w = [i / w184_at_wt for i in core_mass_w184_at_time]
-    mantle_moles_184w = [i / w184_at_wt for i in mantle_mass_w184_at_time]
-
-
-
-    return fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core,  mantle_mass, \
-           core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
-           bulk_mass_w184_check, core_bulk_conc_184w, mantle_bulk_conc_184w, bulk_conc_184w_at_time, \
-           bulk_mass_w184_at_time, radius_mantle, radius_core, cmb_d, temperatures, pressures, \
-           bulk_moles_182w_added_at_time, mantle_moles_184w_remaining_at_time, core_moles_184w_added_at_time, \
-           bulk_moles_184w, core_bulk_moles_184w, mantle_moles_184w
-
-
-density_metal = 7800
-density_melt = 3750
-timestep = 250000
-core_formation_max_time = 5 * (10**6)
-inf_time = 100 * (10**6)
-w182_at_wt = 183.84
-hf182_half_life = 8.9 * (10**6)
-hf182_at_wt = 178.49
-mass_vesta = 2.59076 * (10**20)
-radius_vesta = (262.7) * 1000
-volume_vesta = (4/3) * pi * (radius_vesta**3)
-radius_vesta_core = 113 * 1000
-volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
-mass_vesta_core = density_metal * volume_vesta_core
-mass_vesta_mantle = mass_vesta - mass_vesta_core
-# initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
-# initial_conc_w184 = [23.29356, 23.47345, 23.85845, 23.866664]
-initial_hf182_conc = [16.4539, 16.5605, 16.57299, 16.58399, 16.584425, 16.584556]
-initial_conc_w184 = [20.0194, 23.29356, 23.47345, 23.85845, 23.866664, 23.87737]
-# terrestrial_standard = 0.864900  # Kleine et al 2017
-terrestrial_standard = 0.864680  # Kleine et al 2004
-time_list = list(np.arange(0, inf_time + timestep, timestep))
-time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
-core_formation_max_time_index = time_list.index(core_formation_max_time)
-gravity = 0.25
-thermal_expansivity = 6 * (10**(-5))
-heat_capacity = (10**3)
-# fO2 = [-0.8, -1.10, -2.25, -2.45]
-fO2 = [0.5, -0.8, -1.10, -2.25, -2.45, -3.5]
-temperature_surf = 2000
-pressure_surf = 0
-radius_body = (262.7 * 1000)
-
-avg_eucrite_w182_w184_ratio = 0.866555125
-# avg_eucrite_epsilon_w182 = 19.13660539
-
-
-print(
-    "Mass Vesta Core: {}\n"
-    "Mass Vesta Mantle: {}\n".format(mass_vesta_core, mass_vesta_mantle)
-)
-
-bulk_d_w182_list = []
-bulk_d_w184_list = []
-bulk_d_w_list = []
-cmbd_fO2 = []
-bulk_core_mass_182w_list = []
-bulk_mantle_mass_182w_list = []
-bulk_mass_182w_list = []
-bulk_core_mass_184w_list = []
-bulk_mantle_mass_184w_list = []
-mantle_w182_w184_ratios = []
-core_w182_w184_ratios = []
-bulk_w182_w184_ratios = []
-epsilon_core = []
-epsilon_mantle = []
-epsilon_bulk = []
-
-
-for index, i in enumerate(fO2):
-    hf182_conc = initial_hf182_conc[index]
-    w_184_conc = initial_conc_w184[index]
-
-    fraction_core_accumulated, core_mass_added, mantle_mass_depleted, mass_core, mantle_mass, moles_182hf, \
-               bulk_mass_182w, bulk_conc_182w, bulk_mass_182w_added, bulk_conc_182w_added, mantle_conc_182w_added, \
-               core_conc_182w_added, core_mass_182w_added, mantle_mass_182w_added, bulk_core_mass_182w, \
-               bulk_mantle_mass_182w, bulk_mass_182w_check, core_bulk_conc_182w, mantle_bulk_conc_182w, radius_mantle, \
-                radius_core, cmb_d, temperatures, pressures, bulk_moles_182w_added_at_time, \
-                mantle_moles_182w_added_at_time, core_moles_182w_added_at_time, bulk_moles_182w, core_bulk_moles_182w, \
-                mantle_moles_182w = \
-                    decayW182(timestep=timestep, core_formation_max_time=core_formation_max_time, inf_time=inf_time,
-                  w182_at_wt=w182_at_wt, hf182_half_life=hf182_half_life, hf182_at_wt=hf182_at_wt,
-                  initial_hf182_conc=hf182_conc, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
-                  density_metal=density_metal, density_melt=density_melt, fO2=i, temperature_surf=temperature_surf,
-                  pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
-                  thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity)
-
-    fraction_core_accumulated2, core_mass_added2, mantle_mass_depleted2, mass_core2,  mantle_mass2, \
-               core_mass_w184_added, current_mantle_mass_w184, core_mass_w184_at_time, mantle_mass_w184_at_time, \
-               bulk_mass_w184_check, core_bulk_conc_184w, mantle_bulk_conc_184w, bulk_conc_184w_at_time, bulk_mass_w184_at_time, radius_mantle2, \
-                radius_core2, cmb_d2, temperatures2, pressures2, bulk_moles_184w_added_at_time, \
-                mantle_moles_184w_remaining_at_time, core_moles_184w_added_at_time, bulk_moles_184w, core_bulk_moles_184w, \
-                mantle_moles_184w = \
-                decayW184(initial_conc_w184=w_184_conc, mass_vesta=mass_vesta, mass_vesta_core=mass_vesta_core,
-                  core_formation_max_time=core_formation_max_time, inf_time=inf_time, timestep=timestep,
-                  density_metal=density_metal, density_melt=density_melt, fO2=i, temperature_surf=temperature_surf,
-                  pressure_surf=pressure_surf, radius_body=radius_body, gravity=gravity,
-                  thermal_expansivity=thermal_expansivity, heat_capacity=heat_capacity, w184_at_wt=w182_at_wt)
-
-    bulk_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
-                               for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
-    mantle_epsilon_w182_vesta = [
-        calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
-        for i, j in zip(mantle_bulk_conc_182w, mantle_bulk_conc_184w)]
-    core_epsilon_w182_vesta = [calcEpsilon182W(w182_at_time=i, w184_at_time=j, terretrial_standard=terrestrial_standard)
-                               for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
-
-    bulk_d_182w = [i / j for i, j in zip(bulk_core_mass_182w[1:], bulk_mantle_mass_182w[1:])]
-    bulk_d_184w = [i / j for i, j in zip(core_mass_w184_at_time[1:], mantle_mass_w184_at_time[1:])]
-    bulk_d_w = [(i + j) / (l + k)  for i, j, l, k in zip(bulk_core_mass_182w[1:], bulk_mantle_mass_182w[1:],
-                                                         core_mass_w184_at_time, mantle_mass_w184_at_time)]
-
-    bulk_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mass_182w, bulk_mass_w184_at_time)]
-    mantle_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_mantle_mass_182w, mantle_mass_w184_at_time)]
-    core_ratio_wt_w182_w184 = [i / j for i, j in zip(bulk_core_mass_182w[1:], core_mass_w184_at_time[1:])]
-    bulk_ratio_conc_w182_w184 = [i / j for i, j in zip(bulk_conc_182w, bulk_conc_184w_at_time)]
-    mantle_ratio_conc_w182_w184 = [i / j for i, j in zip(mantle_bulk_conc_182w, mantle_bulk_conc_184w)]
-    core_ratio_conc_w182_w184 = [i / j for i, j in zip(core_bulk_conc_182w[1:], core_bulk_conc_184w[1:])]
-    pct_mass_in_core_w182 = [i / bulk_mass_182w[-1] for i in bulk_core_mass_182w]
-    pct_mass_in_mantle_w182 = [i / bulk_mass_182w[-1] for i in bulk_mantle_mass_182w]
-    pct_mass_in_core_w184 = [i / bulk_mass_w184_at_time[-1] for i in core_mass_w184_at_time]
-    pct_mass_in_mantle_w184 = [i / bulk_mass_w184_at_time[-1] for i in mantle_mass_w184_at_time]
-
-    bulk_d_w182_list.append(bulk_d_182w)
-    bulk_d_w184_list.append(bulk_d_184w)
-    bulk_d_w_list.append(bulk_d_w)
-    bulk_core_mass_182w_list.append(bulk_core_mass_182w)
-    bulk_mantle_mass_182w_list.append(bulk_mantle_mass_182w)
-    bulk_core_mass_184w_list.append(core_mass_w184_at_time)
-    bulk_mantle_mass_184w_list.append(mantle_mass_w184_at_time)
-    bulk_mass_182w_list.append(bulk_mass_182w)
-    cmbd_fO2.append(cmb_d)
-    core_w182_w184_ratios.append([i / j for i, j in zip(bulk_core_mass_182w[1:], core_mass_w184_at_time[1:])])
-    mantle_w182_w184_ratios.append([i / j for i, j in zip(bulk_mantle_mass_182w, mantle_mass_w184_at_time)])
-    bulk_w182_w184_ratios.append([i / j for i, j in zip(bulk_mass_182w, bulk_mass_w184_at_time)])
-    epsilon_bulk.append(bulk_epsilon_w182_vesta)
-    epsilon_core.append(core_epsilon_w182_vesta)
-    epsilon_mantle.append(mantle_epsilon_w182_vesta)
 
 density_metal = 7800
 density_silicate = 3580
-droplet_radius = 0.0185
+vesta_droplet_radius = 0.0185
 earth_droplet_radius = 0.002957762
-diff_length = calcDiffusionLength(chem_diffusivity=10**-8, settling_velocity=0.2580697580112788, droplet_radius=droplet_radius)
+vesta_droplet_volume = (4/3) * pi * (vesta_droplet_radius**3)
+earth_droplet_volume = (4/3) * pi * (earth_droplet_radius**3)
+vesta_droplet_mass = density_metal * vesta_droplet_volume
+earth_droplet_mass = density_metal * earth_droplet_volume
+diff_length = calcDiffusionLength(chem_diffusivity=10**-8, settling_velocity=0.2580697580112788, droplet_radius=vesta_droplet_radius)
 earth_diff_length = calcDiffusionLength(chem_diffusivity=10**-8, settling_velocity=0.646064514, droplet_radius=earth_droplet_radius)
 vesta_z_eq_1_thru_4 = 240
 vesta_z_eq_5_thru_8 = 600
-vesta_vol_mesh_1_thru_4 = ((2 * (droplet_radius + diff_length))**2) * vesta_z_eq_1_thru_4
-vesta_vol_mesh_5_thru_8 = ((2 * (droplet_radius + diff_length))**2) * vesta_z_eq_5_thru_8
+vesta_vol_mesh_1_thru_4 = ((2 * (vesta_droplet_radius + diff_length))**2) * vesta_z_eq_1_thru_4
+vesta_vol_mesh_5_thru_8 = ((2 * (vesta_droplet_radius + diff_length))**2) * vesta_z_eq_5_thru_8
+vesta_mass_mesh_1_thru_4 = density_silicate * vesta_vol_mesh_1_thru_4
+vesta_mass_mesh_5_thru_8 = density_silicate * vesta_vol_mesh_5_thru_8
 earth_z_eq_1_thru_4 = 25
 earth_z_eq_5_thru_8 = 65
 earth_vol_mesh_1_thru_4 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_1_thru_4
 earth_vol_mesh_5_thru_8 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_5_thru_8
 w_at_wt = 183.84
 
+
+
+magma_ocean_concs_182w = pd.read_csv("182w_mantle.csv")
+magma_ocean_concs_184w = pd.read_csv("184w_mantle.csv")
+
+w182_fO2_08_time1 = list(magma_ocean_concs_182w['fO2_-0.8'])[1] * (10**-9)
+w182_fO2_08_time5 = list(magma_ocean_concs_182w['fO2_-0.8'])[-1] * (10**-9)
+w182_fO2_110_time1 = list(magma_ocean_concs_182w['fO2_-1.1'])[1] * (10**-9)
+w182_fO2_110_time5 = list(magma_ocean_concs_182w['fO2_-1.1'])[-1] * (10**-9)
+w182_fO2_225_time1 = list(magma_ocean_concs_182w['fO2_-2.25'])[1] * (10**-9)
+w182_fO2_225_time5 = list(magma_ocean_concs_182w['fO2_-2.25'])[-1] * (10**-9)
+w182_fO2_245_time1 = list(magma_ocean_concs_182w['fO2_-0.8'])[1] * (10**-9)
+w182_fO2_245_time5 = list(magma_ocean_concs_182w['fO2_-2.45'])[-1] * (10**-9)
 
 
 vesta_1 = pd.read_csv("thesis_model_outputs/Vesta_1.csv")
@@ -695,81 +228,343 @@ vesta_magma_ocean_moles_2 = (vesta_vol_mesh_5_thru_8 * density_silicate * vesta_
 earth_magma_ocean_moles_1 = (earth_vol_mesh_1_thru_4 * density_silicate * earth_mantle_ppb) / w_at_wt
 earth_magma_ocean_moles_2 = (earth_vol_mesh_5_thru_8 * density_silicate * earth_mantle_ppb) / w_at_wt
 
-concs_mesh_vesta_1, concs_objs_vesta_1, moles_mesh_vesta_1, moles_objs_vesta_1, verify_D_vesta_1 = recalcConcentration(predicted_d=vesta_1['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_1, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_2, concs_objs_vesta_2, moles_mesh_vesta_2, moles_objs_vesta_2, verify_D_vesta_2 = recalcConcentration(predicted_d=vesta_2['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_1, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_3, concs_objs_vesta_3, moles_mesh_vesta_3, moles_objs_vesta_3, verify_D_vesta_3 = recalcConcentration(predicted_d=vesta_3['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_1, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_4, concs_objs_vesta_4, moles_mesh_vesta_4, moles_objs_vesta_4, verify_D_vesta_4 = recalcConcentration(predicted_d=vesta_4['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_1, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
-concs_mesh_vesta_5, concs_objs_vesta_5, moles_mesh_vesta_5, moles_objs_vesta_5, verify_D_vesta_5 = recalcConcentration(predicted_d=vesta_5['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_2, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-concs_mesh_vesta_6, concs_objs_vesta_6, moles_mesh_vesta_6, moles_objs_vesta_6, verify_D_vesta_6 = recalcConcentration(predicted_d=vesta_6['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_2, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-concs_mesh_vesta_7, concs_objs_vesta_7, moles_mesh_vesta_7, moles_objs_vesta_7, verify_D_vesta_7 = recalcConcentration(predicted_d=vesta_7['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_2, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-concs_mesh_vesta_8, concs_objs_vesta_8, moles_mesh_vesta_8, moles_objs_vesta_8, verify_D_vesta_8 = recalcConcentration(predicted_d=vesta_8['D'],
-                              original_moles_silicate=vesta_magma_ocean_moles_2, original_moles_metal=0, volume_mesh=vesta_vol_mesh_5_thru_8, radius_object=droplet_radius)
-
-# reverse_D_vesta_1 = forIterReverseD(obj_concs=concs_objs_vesta_1, cell_concs=concs_mesh_vesta_1)
-# reverse_D_vesta_2 = forIterReverseD(obj_concs=concs_objs_vesta_2, cell_concs=concs_mesh_vesta_2)
-# reverse_D_vesta_3 = forIterReverseD(obj_concs=concs_objs_vesta_3, cell_concs=concs_mesh_vesta_3)
-# reverse_D_vesta_4 = forIterReverseD(obj_concs=concs_objs_vesta_4, cell_concs=concs_mesh_vesta_4)
-# reverse_D_vesta_5 = forIterReverseD(obj_concs=concs_objs_vesta_5, cell_concs=concs_mesh_vesta_5)
-# reverse_D_vesta_6 = forIterReverseD(obj_concs=concs_objs_vesta_6, cell_concs=concs_mesh_vesta_6)
-# reverse_D_vesta_7 = forIterReverseD(obj_concs=concs_objs_vesta_7, cell_concs=concs_mesh_vesta_7)
-# reverse_D_vesta_8 = forIterReverseD(obj_concs=concs_objs_vesta_8, cell_concs=concs_mesh_vesta_8)
 
 
-num_droplets_vesta = calcNumTotalDroplets(core_radius=113*1000, droplet_radius=droplet_radius)
+concs_mesh_vesta_1_time1, concs_objs_vesta_1_time1, moles_mesh_vesta_1_time1, moles_objs_vesta_1_time1, mass_d_list_vesta_1_time1, volume_d_list_vesta_1_time1 = recalcConcentration(predicted_d=vesta_1['D'],
+                              original_mass_conc_silicate=w182_fO2_08_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+concs_mesh_vesta_1_time5, concs_objs_vesta_1_time5, moles_mesh_vesta_1_time5, moles_objs_vesta_1_time5, mass_d_list_vesta_1_time5, volume_d_list_vesta_1_time5 = recalcConcentration(predicted_d=vesta_1['D'],
+                              original_mass_conc_silicate=w182_fO2_08_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+
+concs_mesh_vesta_2_time1, concs_objs_vesta_2_time1, moles_mesh_vesta_2_time1, moles_objs_vesta_2_time1, mass_d_list_vesta_2_time1, volume_d_list_vesta_2_time1 = recalcConcentration(predicted_d=vesta_2['D'],
+                              original_mass_conc_silicate=w182_fO2_110_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+concs_mesh_vesta_2_time5, concs_objs_vesta_2_time5, moles_mesh_vesta_2_time5, moles_objs_vesta_2_time5, mass_d_list_vesta_2_time5, volume_d_list_vesta_2_time5 = recalcConcentration(predicted_d=vesta_2['D'],
+                              original_mass_conc_silicate=w182_fO2_110_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+
+concs_mesh_vesta_3_time1, concs_objs_vesta_3_time1, moles_mesh_vesta_3_time1, moles_objs_vesta_3_time1, mass_d_list_vesta_3_time1, volume_d_list_vesta_3_time1 = recalcConcentration(predicted_d=vesta_3['D'],
+                              original_mass_conc_silicate=w182_fO2_225_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+concs_mesh_vesta_3_time5, concs_objs_vesta_3_time5, moles_mesh_vesta_3_time5, moles_objs_vesta_3_time5, mass_d_list_vesta_3_time5, volume_d_list_vesta_3_time5 = recalcConcentration(predicted_d=vesta_3['D'],
+                              original_mass_conc_silicate=w182_fO2_225_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+
+concs_mesh_vesta_4_time1, concs_objs_vesta_4_time1, moles_mesh_vesta_4_time1, moles_objs_vesta_4_time1, mass_d_list_vesta_4_time1, volume_d_list_vesta_4_time1 = recalcConcentration(predicted_d=vesta_4['D'],
+                              original_mass_conc_silicate=w182_fO2_245_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+concs_mesh_vesta_4_time5, concs_objs_vesta_4_time5, moles_mesh_vesta_4_time5, moles_objs_vesta_4_time5, mass_d_list_vesta_4_time5, volume_d_list_vesta_4_time5 = recalcConcentration(predicted_d=vesta_4['D'],
+                              original_mass_conc_silicate=w182_fO2_245_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_1_thru_4, w_at_wt=w_at_wt)
+
+concs_mesh_vesta_5_time1, concs_objs_vesta_5_time1, moles_mesh_vesta_5_time1, moles_objs_vesta_5_time1, mass_d_list_vesta_5_time1, volume_d_list_vesta_5_time1 = recalcConcentration(predicted_d=vesta_5['D'],
+                              original_mass_conc_silicate=w182_fO2_08_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+concs_mesh_vesta_5_time5, concs_objs_vesta_5_time5, moles_mesh_vesta_5_time5, moles_objs_vesta_5_time5, mass_d_list_vesta_5_time5, volume_d_list_vesta_5_time5 = recalcConcentration(predicted_d=vesta_5['D'],
+                              original_mass_conc_silicate=w182_fO2_08_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+
+concs_mesh_vesta_6_time1, concs_objs_vesta_6_time1, moles_mesh_vesta_6_time1, moles_objs_vesta_6_time1, mass_d_list_vesta_6_time1, volume_d_list_vesta_6_time1 = recalcConcentration(predicted_d=vesta_6['D'],
+                              original_mass_conc_silicate=w182_fO2_110_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+concs_mesh_vesta_6_time5, concs_objs_vesta_6_time5, moles_mesh_vesta_6_time5, moles_objs_vesta_6_time5, mass_d_list_vesta_6_time5, volume_d_list_vesta_6_time5 = recalcConcentration(predicted_d=vesta_6['D'],
+                              original_mass_conc_silicate=w182_fO2_110_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+
+concs_mesh_vesta_7_time1, concs_objs_vesta_7_time1, moles_mesh_vesta_7_time1, moles_objs_vesta_7_time1, mass_d_list_vesta_7_time1, volume_d_list_vesta_7_time1 = recalcConcentration(predicted_d=vesta_7['D'],
+                              original_mass_conc_silicate=w182_fO2_225_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+concs_mesh_vesta_7_time5, concs_objs_vesta_7_time5, moles_mesh_vesta_7_time5, moles_objs_vesta_7_time5, mass_d_list_vesta_7_time5, volume_d_list_vesta_7_time5 = recalcConcentration(predicted_d=vesta_7['D'],
+                              original_mass_conc_silicate=w182_fO2_225_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+concs_mesh_vesta_8_time1, concs_objs_vesta_8_time1, moles_mesh_vesta_8_time1, moles_objs_vesta_8_time1, mass_d_list_vesta_8_time1, volume_d_list_vesta_8_time1 = recalcConcentration(predicted_d=vesta_8['D'],
+                              original_mass_conc_silicate=w182_fO2_245_time1, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+concs_mesh_vesta_8_time5, concs_objs_vesta_8_time5, moles_mesh_vesta_8_time5, moles_objs_vesta_8_time5, mass_d_list_vesta_8_time5, volume_d_list_vesta_8_time5 = recalcConcentration(predicted_d=vesta_8['D'],
+                              original_mass_conc_silicate=w182_fO2_245_time5, original_mass_conc_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=vesta_droplet_radius, density_melt=density_silicate, density_metal=density_metal,
+                                                mass_droplet=vesta_droplet_mass, mass_silicate=vesta_mass_mesh_5_thru_8, w_at_wt=w_at_wt)
+
+mass_conc_droplet_vesta_1_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_1_time1]
+mass_conc_droplet_vesta_1_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_1_time5]
+mass_conc_droplet_vesta_2_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_2_time1]
+mass_conc_droplet_vesta_2_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_2_time5]
+mass_conc_droplet_vesta_3_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_3_time1]
+mass_conc_droplet_vesta_3_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_3_time5]
+mass_conc_droplet_vesta_4_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_4_time1]
+mass_conc_droplet_vesta_4_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_4_time5]
+mass_conc_droplet_vesta_5_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_5_time1]
+mass_conc_droplet_vesta_5_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_5_time5]
+mass_conc_droplet_vesta_6_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_6_time1]
+mass_conc_droplet_vesta_6_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_6_time5]
+mass_conc_droplet_vesta_7_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_7_time1]
+mass_conc_droplet_vesta_7_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_7_time5]
+mass_conc_droplet_vesta_8_time1 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_8_time1]
+mass_conc_droplet_vesta_8_time5 = [(((i * w_at_wt) * vesta_droplet_volume / 1000) / vesta_droplet_mass) * (10**9) for i in concs_objs_vesta_8_time5]
+
+
+
+num_droplets_vesta = calcNumTotalDroplets(core_radius=113*1000, droplet_radius=vesta_droplet_radius)
 num_droplets_earth = calcNumTotalDroplets(core_radius=113*1000, droplet_radius=earth_droplet_radius)
 
+# print('1: {}\n2: {}\n3: {}\n4: {}\n5: {}\n6: {}\n7: {}\n8: {}\n'.format(
+#     moles_objs_vesta_1[-1], moles_objs_vesta_2[-1], moles_objs_vesta_3[-1],  moles_objs_vesta_4[-1],
+#     moles_objs_vesta_5[-1], moles_objs_vesta_6[-1], moles_objs_vesta_7[-1], moles_objs_vesta_8[-1]
+# ))
 
-# earth_1 = pd.read_csv("thesis_model_outputs/Earth_1.csv")
-# earth_2 = pd.read_csv("thesis_model_outputs/Earth_2.csv")
-# earth_3 = pd.read_csv("thesis_model_outputs/Earth_3.csv")
-# earth_4 = pd.read_csv("thesis_model_outputs/Earth_4.csv")
-# earth_5 = pd.read_csv("thesis_model_outputs/Earth_5.csv")
-# earth_6 = pd.read_csv("thesis_model_outputs/Earth_6.csv")
-# earth_7 = pd.read_csv("thesis_model_outputs/Earth_7.csv")
-# earth_8 = pd.read_csv("thesis_model_outputs/Earth_8.csv")
-#
-# depth_earth_1 = [i / 1000 for i in [0] + list(earth_1['z-depth'])]
-# depth_earth_2 = [i / 1000 for i in [0] + list(earth_2['z-depth'])]
-# depth_earth_3 = [i / 1000 for i in [0] + list(earth_3['z-depth'])]
-# depth_earth_4 = [i / 1000 for i in [0] + list(earth_4['z-depth'])]
-# depth_earth_5 = [i / 1000 for i in [0] + list(earth_5['z-depth'])]
-# depth_earth_6 = [i / 1000 for i in [0] + list(earth_6['z-depth'])]
-# depth_earth_7 = [i / 1000 for i in [0] + list(earth_7['z-depth'])]
-# depth_earth_8 = [i / 1000 for i in [0] + list(earth_8['z-depth'])]
-#
-# concs_mesh_earth_1, concs_objs_earth_1, moles_mesh_earth_1, moles_objs_earth_1, verify_D_earth_1 = recalcConcentration(predicted_d=earth_1['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_1, original_moles_metal=moles_per_droplet_earth_1, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=earth_droplet_radius)
-# concs_mesh_earth_2, concs_objs_earth_2, moles_mesh_earth_2, moles_objs_earth_2, verify_D_earth_2 = recalcConcentration(predicted_d=earth_2['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_1, original_moles_metal=moles_per_droplet_earth_2, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=earth_droplet_radius)
-# concs_mesh_earth_3, concs_objs_earth_3, moles_mesh_earth_3, moles_objs_earth_3, verify_D_earth_3 = recalcConcentration(predicted_d=earth_3['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_1, original_moles_metal=moles_per_droplet_earth_3, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=earth_droplet_radius)
-# concs_mesh_earth_4, concs_objs_earth_4, moles_mesh_earth_4, moles_objs_earth_4, verify_D_earth_4 = recalcConcentration(predicted_d=earth_4['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_1, original_moles_metal=moles_per_droplet_earth_4, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=earth_droplet_radius)
-# concs_mesh_earth_5, concs_objs_earth_5, moles_mesh_earth_5, moles_objs_earth_5, verify_D_earth_5 = recalcConcentration(predicted_d=earth_5['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_2, original_moles_metal=moles_per_droplet_earth_5, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=earth_droplet_radius)
-# concs_mesh_earth_6, concs_objs_earth_6, moles_mesh_earth_6, moles_objs_earth_6, verify_D_earth_6 = recalcConcentration(predicted_d=earth_6['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_2, original_moles_metal=moles_per_droplet_earth_6, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=earth_droplet_radius)
-# concs_mesh_earth_7, concs_objs_earth_7, moles_mesh_earth_7, moles_objs_earth_7, verify_D_earth_7 = recalcConcentration(predicted_d=earth_7['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_2, original_moles_metal=moles_per_droplet_earth_7, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=earth_droplet_radius)
-# concs_mesh_earth_8, concs_objs_earth_8, moles_mesh_earth_8, moles_objs_earth_8, verify_D_earth_8 = recalcConcentration(predicted_d=earth_8['D'],
-#                               original_moles_silicate=earth_magma_ocean_moles_2, original_moles_metal=moles_per_droplet_earth_8, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=earth_droplet_radius)
 
+moles_per_droplet_earth_1_time1 = (moles_objs_vesta_1_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_1_time5 = (moles_objs_vesta_1_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_2_time1 = (moles_objs_vesta_2_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_2_time5 = (moles_objs_vesta_2_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_3_time1 = (moles_objs_vesta_3_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_3_time5 = (moles_objs_vesta_3_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_4_time1 = (moles_objs_vesta_4_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_4_time5 = (moles_objs_vesta_4_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_5_time1 = (moles_objs_vesta_5_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_5_time5 = (moles_objs_vesta_5_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_6_time1 = (moles_objs_vesta_6_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_6_time5 = (moles_objs_vesta_6_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_7_time1 = (moles_objs_vesta_7_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_7_time5 = (moles_objs_vesta_7_time5[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_8_time1 = (moles_objs_vesta_8_time1[-1] * num_droplets_vesta) / num_droplets_earth
+moles_per_droplet_earth_8_time5 = (moles_objs_vesta_8_time5[-1] * num_droplets_vesta) / num_droplets_earth
+
+
+# print('1: {}\n2: {}\n3: {}\n4: {}\n5: {}\n6: {}\n7: {}\n8: {}\n'.format(
+#     moles_per_droplet_earth_1, moles_per_droplet_earth_2, moles_per_droplet_earth_3,  moles_per_droplet_earth_4,
+#     moles_per_droplet_earth_5, moles_per_droplet_earth_6, moles_per_droplet_earth_7, moles_per_droplet_earth_8
+# ))
+#
+# print("Num Droplets Vesta: {}\nNum Droplets Earth: {}".format(num_droplets_vesta, num_droplets_earth))
+
+
+earth_1 = pd.read_csv("thesis_model_outputs/Earth_1.csv")
+earth_2 = pd.read_csv("thesis_model_outputs/Earth_2.csv")
+earth_3 = pd.read_csv("thesis_model_outputs/Earth_3.csv")
+earth_4 = pd.read_csv("thesis_model_outputs/Earth_4.csv")
+earth_5 = pd.read_csv("thesis_model_outputs/Earth_5.csv")
+earth_6 = pd.read_csv("thesis_model_outputs/Earth_6.csv")
+earth_7 = pd.read_csv("thesis_model_outputs/Earth_7.csv")
+earth_8 = pd.read_csv("thesis_model_outputs/Earth_8.csv")
+
+depth_earth_1 = [i / 1000 for i in [0] + list(earth_1['z-depth'])]
+depth_earth_2 = [i / 1000 for i in [0] + list(earth_2['z-depth'])]
+depth_earth_3 = [i / 1000 for i in [0] + list(earth_3['z-depth'])]
+depth_earth_4 = [i / 1000 for i in [0] + list(earth_4['z-depth'])]
+depth_earth_5 = [i / 1000 for i in [0] + list(earth_5['z-depth'])]
+depth_earth_6 = [i / 1000 for i in [0] + list(earth_6['z-depth'])]
+depth_earth_7 = [i / 1000 for i in [0] + list(earth_7['z-depth'])]
+depth_earth_8 = [i / 1000 for i in [0] + list(earth_8['z-depth'])]
+
+# concs_mesh_earth_1, concs_objs_earth_1, moles_mesh_earth_1, moles_objs_earth_1, mass_d_list_earth_1, volume_d_list_earth_1  = recalcConcentration(predicted_d=earth_1['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_1, original_mass_conc_metal=moles_per_droplet_earth_1, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_2, concs_objs_earth_2, moles_mesh_earth_2, moles_objs_earth_2,  mass_d_list_earth_2, volume_d_list_earth_2 = recalcConcentration(predicted_d=earth_2['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_1, original_mass_conc_metal=moles_per_droplet_earth_2, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_3, concs_objs_earth_3, moles_mesh_earth_3, moles_objs_earth_3, mass_d_list_earth_3, volume_d_list_earth_3 = recalcConcentration(predicted_d=earth_3['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_1, original_mass_conc_metal=moles_per_droplet_earth_3, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_4, concs_objs_earth_4, moles_mesh_earth_4, moles_objs_earth_4, mass_d_list_earth_4, volume_d_list_earth_4 = recalcConcentration(predicted_d=earth_4['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_1, original_mass_conc_metal=moles_per_droplet_earth_4, volume_mesh=earth_vol_mesh_1_thru_4, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_5, concs_objs_earth_5, moles_mesh_earth_5, moles_objs_earth_5, mass_d_list_earth_5, volume_d_list_earth_5 = recalcConcentration(predicted_d=earth_5['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_2, original_mass_conc_metal=moles_per_droplet_earth_5, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_6, concs_objs_earth_6, moles_mesh_earth_6, moles_objs_earth_6,  mass_d_list_earth_6, volume_d_list_earth_6 = recalcConcentration(predicted_d=earth_6['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_2, original_mass_conc_metal=moles_per_droplet_earth_6, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_7, concs_objs_earth_7, moles_mesh_earth_7, moles_objs_earth_7, mass_d_list_earth_7, volume_d_list_earth_7 = recalcConcentration(predicted_d=earth_7['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_2, original_mass_conc_metal=moles_per_droplet_earth_7, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
+# concs_mesh_earth_8, concs_objs_earth_8, moles_mesh_earth_8, moles_objs_earth_8, mass_d_list_earth_8, volume_d_list_earth_8 = recalcConcentration(predicted_d=earth_8['D'],
+#                               original_mass_conc_silicate=earth_magma_ocean_moles_2, original_mass_conc_metal=moles_per_droplet_earth_8, volume_mesh=earth_vol_mesh_5_thru_8, radius_object=droplet_radius,
+#                               density_melt=density_silicate, density_metal=density_metal)
 
 
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(111)
-ax1.plot(depth_vesta_1, concs_objs_vesta_1, linewidth=2.0)
+ax1.plot(depth_vesta_1, mass_conc_droplet_vesta_1_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax1.plot(depth_vesta_1, mass_conc_droplet_vesta_1_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax1.fill_between(depth_vesta_1, mass_conc_droplet_vesta_1_time1, mass_conc_droplet_vesta_1_time5, color='red', alpha=0.2)
 ax1.grid()
+ax1.set_xlabel("Depth (km)")
+ax1.set_ylabel("Concentration (ppb)")
+ax1.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 1)")
+ax1.legend(loc='upper left')
+
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(111)
+ax2.plot(depth_vesta_2, mass_conc_droplet_vesta_2_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax2.plot(depth_vesta_2, mass_conc_droplet_vesta_2_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax2.fill_between(depth_vesta_2, mass_conc_droplet_vesta_2_time1, mass_conc_droplet_vesta_2_time5, color='red', alpha=0.2)
+ax2.grid()
+ax2.set_xlabel("Depth (km)")
+ax2.set_ylabel("Concentration (ppb)")
+ax2.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 2)")
+ax2.legend(loc='upper left')
+
+fig3 = plt.figure()
+ax3 = fig3.add_subplot(111)
+ax3.plot(depth_vesta_3, mass_conc_droplet_vesta_3_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax3.plot(depth_vesta_3, mass_conc_droplet_vesta_3_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax3.fill_between(depth_vesta_3, mass_conc_droplet_vesta_3_time1, mass_conc_droplet_vesta_3_time5, color='red', alpha=0.2)
+ax3.grid()
+ax3.set_xlabel("Depth (km)")
+ax3.set_ylabel("Concentration (ppb)")
+ax3.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 3)")
+ax3.legend(loc='upper left')
+
+fig4 = plt.figure()
+ax4 = fig4.add_subplot(111)
+ax4.plot(depth_vesta_4, mass_conc_droplet_vesta_4_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax4.plot(depth_vesta_4, mass_conc_droplet_vesta_4_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax4.fill_between(depth_vesta_4, mass_conc_droplet_vesta_4_time1, mass_conc_droplet_vesta_4_time5, color='red', alpha=0.2)
+ax4.grid()
+ax4.set_xlabel("Depth (km)")
+ax4.set_ylabel("Concentration (ppb)")
+ax4.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 4)")
+ax4.legend(loc='upper left')
+
+fig5 = plt.figure()
+ax5 = fig5.add_subplot(111)
+ax5.plot(depth_vesta_5, mass_conc_droplet_vesta_5_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax5.plot(depth_vesta_5, mass_conc_droplet_vesta_5_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax5.fill_between(depth_vesta_5, mass_conc_droplet_vesta_5_time1, mass_conc_droplet_vesta_5_time5, color='red', alpha=0.2)
+ax5.grid()
+ax5.set_xlabel("Depth (km)")
+ax5.set_ylabel("Concentration (ppb)")
+ax5.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 5)")
+ax5.legend(loc='upper left')
+
+fig6 = plt.figure()
+ax6 = fig6.add_subplot(111)
+ax6.plot(depth_vesta_6, mass_conc_droplet_vesta_6_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax6.plot(depth_vesta_6, mass_conc_droplet_vesta_6_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax6.fill_between(depth_vesta_6, mass_conc_droplet_vesta_6_time1, mass_conc_droplet_vesta_6_time5, color='red', alpha=0.2)
+ax6.grid()
+ax6.set_xlabel("Depth (km)")
+ax6.set_ylabel("Concentration (ppb)")
+ax6.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 6)")
+ax6.legend(loc='upper left')
+
+fig7 = plt.figure()
+ax7 = fig7.add_subplot(111)
+ax7.plot(depth_vesta_7, mass_conc_droplet_vesta_7_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax7.plot(depth_vesta_7, mass_conc_droplet_vesta_7_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax7.fill_between(depth_vesta_7, mass_conc_droplet_vesta_7_time1, mass_conc_droplet_vesta_7_time5, color='red', alpha=0.2)
+ax7.grid()
+ax7.set_xlabel("Depth (km)")
+ax7.set_ylabel("Concentration (ppb)")
+ax7.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 7)")
+ax7.legend(loc='upper left')
+
+fig8 = plt.figure()
+ax8 = fig8.add_subplot(111)
+ax8.plot(depth_vesta_8, mass_conc_droplet_vesta_8_time1, linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax8.plot(depth_vesta_8, mass_conc_droplet_vesta_8_time5, linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax8.fill_between(depth_vesta_8, mass_conc_droplet_vesta_8_time1, mass_conc_droplet_vesta_8_time5, color='red', alpha=0.2)
+ax8.grid()
+ax8.set_xlabel("Depth (km)")
+ax8.set_ylabel("Concentration (ppb)")
+ax8.set_title("Mass Concentration of $^{182}$W in an Iron Droplet (Vesta Model 8)")
+ax8.legend(loc='upper left')
 
 
 
+
+
+
+
+
+fig9 = plt.figure()
+ax9 = fig9.add_subplot(111)
+ax9.plot(depth_vesta_1, [i * (10**-9) *  (10**-9) * vesta_droplet_mass for i in mass_conc_droplet_vesta_1_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax9.plot(depth_vesta_1, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_1_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax9.fill_between(depth_vesta_1, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_1_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_1_time5], color='red', alpha=0.2)
+ax9.grid()
+ax9.set_xlabel("Depth (km)")
+ax9.set_ylabel("Mass (kg)")
+ax9.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 1)")
+ax9.legend(loc='upper left')
+
+fig10 = plt.figure()
+ax10 = fig10.add_subplot(111)
+ax10.plot(depth_vesta_2, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_1_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax10.plot(depth_vesta_2, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax10.fill_between(depth_vesta_2, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_2_time5], color='red', alpha=0.2)
+ax10.grid()
+ax10.set_xlabel("Depth (km)")
+ax10.set_ylabel("Mass (kg)")
+ax10.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 2)")
+ax10.legend(loc='upper left')
+
+fig11 = plt.figure()
+ax11 = fig11.add_subplot(111)
+ax11.plot(depth_vesta_3, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_3_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax11.plot(depth_vesta_3, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_3_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax11.fill_between(depth_vesta_3, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_3_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_3_time5], color='red', alpha=0.2)
+ax11.grid()
+ax11.set_xlabel("Depth (km)")
+ax11.set_ylabel("Mass (kg)")
+ax11.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 3)")
+ax11.legend(loc='upper left')
+
+fig12 = plt.figure()
+ax12 = fig12.add_subplot(111)
+ax12.plot(depth_vesta_4, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_4_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax12.plot(depth_vesta_4, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_4_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax12.fill_between(depth_vesta_4, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_4_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_4_time5], color='red', alpha=0.2)
+ax12.grid()
+ax12.set_xlabel("Depth (km)")
+ax12.set_ylabel("Mass (kg)")
+ax12.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 4)")
+ax12.legend(loc='upper left')
+
+fig13 = plt.figure()
+ax13 = fig13.add_subplot(111)
+ax13.plot(depth_vesta_5, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_5_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax13.plot(depth_vesta_5, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_5_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax13.fill_between(depth_vesta_5, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_5_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_5_time5], color='red', alpha=0.2)
+ax13.grid()
+ax13.set_xlabel("Depth (km)")
+ax13.set_ylabel("Mass (kg)")
+ax13.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 5)")
+ax13.legend(loc='upper left')
+
+fig14 = plt.figure()
+ax14 = fig14.add_subplot(111)
+ax14.plot(depth_vesta_6, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_6_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax14.plot(depth_vesta_6, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_6_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax14.fill_between(depth_vesta_6, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_6_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_6_time5], color='red', alpha=0.2)
+ax14.grid()
+ax14.set_xlabel("Depth (km)")
+ax14.set_ylabel("Mass (kg)")
+ax14.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 6)")
+ax14.legend(loc='upper left')
+
+fig15 = plt.figure()
+ax15 = fig15.add_subplot(111)
+ax15.plot(depth_vesta_7, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_7_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax15.plot(depth_vesta_7, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_7_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax15.fill_between(depth_vesta_7, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_7_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_7_time5], color='red', alpha=0.2)
+ax15.grid()
+ax15.set_xlabel("Depth (km)")
+ax15.set_ylabel("Mass (kg)")
+ax15.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 7)")
+ax15.legend(loc='upper left')
+
+fig16 = plt.figure()
+ax16 = fig16.add_subplot(111)
+ax16.plot(depth_vesta_8, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_8_time1], linewidth=2, linestyle="--", color='black', label='0 Ma')
+ax16.plot(depth_vesta_8, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_8_time5], linewidth=2, linestyle="-", color='black', label='5 Ma')
+ax16.fill_between(depth_vesta_8, [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_8_time1], [i * (10**-9) *  vesta_droplet_mass for i in mass_conc_droplet_vesta_8_time5], color='red', alpha=0.2)
+ax16.grid()
+ax16.set_xlabel("Depth (km)")
+ax16.set_ylabel("Mass (kg)")
+ax16.set_title("Mass of $^{182}$W in an Iron Droplet (Vesta Model 8)")
+ax16.legend(loc='upper left')
 
 
 plt.show()

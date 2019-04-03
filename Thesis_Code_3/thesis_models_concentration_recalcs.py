@@ -96,6 +96,8 @@ def recalcConcentration(predicted_d, original_moles_silicate, original_moles_met
 
 
 
+magma_ocean_concs_182w = pd.read_csv("182w_mantle.csv")
+magma_ocean_concs_184w = pd.read_csv("184w_mantle.csv")
 
 
 droplet_radius = 0.0185
@@ -128,6 +130,8 @@ depth_vesta_5 = [i / 1000 for i in [0] + list(vesta_5['z-depth'])]
 depth_vesta_6 = [i / 1000 for i in [0] + list(vesta_6['z-depth'])]
 depth_vesta_7 = [i / 1000 for i in [0] + list(vesta_7['z-depth'])]
 depth_vesta_8 = [i / 1000 for i in [0] + list(vesta_8['z-depth'])]
+
+
 
 concs_mesh_vesta_1, concs_objs_vesta_1, moles_mesh_vesta_1, moles_objs_vesta_1, verify_D_vesta_1 = recalcConcentration(predicted_d=vesta_1['D'],
                               original_moles_silicate=0.27950089725326804, original_moles_metal=0, volume_mesh=vesta_vol_mesh_1_thru_4, radius_object=droplet_radius)
@@ -608,8 +612,4 @@ ax26.grid()
 ax26.legend(loc='lower right')
 
 
-intersection = bisect.bisect_left(bulk_D_earth_6, 40)
-print(intersection)
-
-
-# plt.show()
+plt.show()

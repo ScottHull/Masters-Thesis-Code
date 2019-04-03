@@ -70,6 +70,8 @@ ax1.plot([i for i in radii], z_eqs_vesta[0], linewidth=2.0, color='blue', label=
 ax1.plot([i for i in radii], z_eqs_earth[0], linewidth=2.0, color='red', label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-3.5}$)")
 ax1.plot([i for i in radii], z_eqs_vesta[1], linewidth=2.0, color='blue', linestyle="--", label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-1.0}$)")
 ax1.plot([i for i in radii], z_eqs_earth[1], linewidth=2.0, color='red', linestyle="--", label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-1.0}$)")
+ax1.axhline(2891 * 1000, linestyle="--", color='black', label="Earth Mantle Depth")
+ax1.axhline(149700, linestyle="-.", color='black', label="Vesta Mantle Depth")
 ax1.set_xlabel("Droplet Radius (m)")
 ax1.set_ylabel("z$_{eq}$ (m)")
 ax1.set_title("Droplet Radius vs. 99% Chemical Equilibration Distance")
