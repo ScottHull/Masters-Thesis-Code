@@ -61,8 +61,8 @@ def meltLengthWidth(diff_length, droplet_radius):
 def recalcConcentration(predicted_d, original_mass_conc_silicate, original_mass_conc_metal, volume_mesh, radius_object,
                         density_metal, density_melt, mass_droplet, mass_silicate, w_at_wt):
     volume_obj = (4 / 3) * pi * (radius_object ** 3)
-    original_moles_silicate = (original_mass_conc_silicate * (mass_silicate * 1000)) / w_at_wt
-    original_moles_metal = (original_mass_conc_metal * (mass_droplet * 1000)) / w_at_wt
+    original_moles_silicate = (original_mass_conc_silicate * (mass_silicate)) / (w_at_wt / 1000)
+    original_moles_metal = (original_mass_conc_metal * (mass_droplet)) / (w_at_wt / 1000)
 
     original_conc_silicate = original_moles_silicate / volume_mesh
     original_conc_metal = original_moles_metal / volume_obj
@@ -74,7 +74,7 @@ def recalcConcentration(predicted_d, original_mass_conc_silicate, original_mass_
     mass_d_list = []
     volume_d_list = []
     for index, d_mole in enumerate(list(predicted_d)):
-        d_volume = (density_melt / density_melt) * d_mole
+        d_volume = (density_metal / density_melt) * d_mole
         old_moles_obj = moles_objs[index - 1]
         old_moles_cell = moles_mesh[index - 1]
 
@@ -187,7 +187,11 @@ earth_z_eq_5_thru_8 = 65
 earth_vol_mesh_1_thru_4 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_1_thru_4
 earth_vol_mesh_5_thru_8 = ((2 * (earth_droplet_radius + earth_diff_length))**2) * earth_z_eq_5_thru_8
 w_at_wt = 183.84
-modeled_mass_w182_in_vesta_core = 1.29 * (10**10)
+
+modeled_mass_w182_in_vesta_core_08 = 1.29 * (10**10)
+modeled_mass_w182_in_vesta_core_110 = 1.29 * (10**10)
+modeled_mass_w182_in_vesta_core_225 = 1.29 * (10**10)
+modeled_mass_w182_in_vesta_core_245 = 1.29 * (10**10)
 
 
 
