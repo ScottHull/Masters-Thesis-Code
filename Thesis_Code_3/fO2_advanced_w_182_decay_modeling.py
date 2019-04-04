@@ -36,14 +36,14 @@ def collectCoeffsSimple(pressure, temperature):
           'epsilon': 0
     }
 
-    if 0 <= pressure <= 2:
+    if 0 <= pressure <= 3:
         coeffs['alpha'] = 1.11
         coeffs['beta'] = -1.18
         coeffs['chi'] = -0.85
         coeffs['delta'] = 1680
         coeffs['epsilon'] = 487
 
-    elif 2 < pressure:
+    elif 3 < pressure:
         coeffs['alpha'] = 1.05
         coeffs['beta'] = -1.10
         coeffs['chi'] = -0.84
@@ -448,10 +448,10 @@ radius_vesta_core = 113 * 1000
 volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
 mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
-# initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
-# initial_conc_w184 = [23.059866, 23.47345, 23.85845, 23.866664]
-initial_hf182_conc = [16.434248, 16.4539, 16.5605, 16.57299, 16.58399, 16.584425, 16.584556]
-initial_conc_w184 = [19.54231, 20.0194, 23.059866, 23.47345, 23.85845, 23.866664, 23.87737]
+initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
+initial_conc_w184 = [23.059866, 23.47345, 23.85845, 23.866664]
+# initial_hf182_conc = [16.433865, 16.434248, 16.439563, 16.4539, 16.49013, 16.5605, 16.57299, 16.58399, 16.584425, 16.584556]
+# initial_conc_w184 = [19.533181, 19.54231, 19.669395, 20.0194, 20.96274, 23.059866, 23.47345, 23.85845, 23.866664, 23.87737]
 # terrestrial_standard = 0.864900  # Kleine et al 2017
 terrestrial_standard = 0.864680  # Kleine et al 2004
 time_list = list(np.arange(0, inf_time + timestep, timestep))
@@ -460,8 +460,8 @@ core_formation_max_time_index = time_list.index(core_formation_max_time)
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-# fO2 = [-0.8, -1.10, -2.25, -2.45]
-fO2 = [2.0, 0.5, -0.8, -1.10, -2.25, -2.45, -3.5]
+fO2 = [-0.8, -1.10, -2.25, -2.45]
+# fO2 = [3.5, 2.0, 1.0, 0.5, 0, -0.8, -1.10, -2.25, -2.45, -3.5]
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
@@ -586,6 +586,14 @@ w184_df = pd.DataFrame(w184_mantle_dict)
 w182_df.to_csv("182w_mantle.csv")
 w184_df.to_csv("184w_mantle.csv")
 
+
+modeled_core_masses_w182 = []
+modeled_core_masses_w184 = []
+for index, i in enumerate(fO2):
+    cm_182w = bulk_core_mass_182w_list[index][-1]
+    cm_184w = bulk_core_mass_184w_list[index][-1]
+    modeled_core_masses_w182.append(cm_182w)
+    modeled_core_masses_w184.append(cm_184w)
 
 
 # fig1 = plt.figure()
@@ -1013,11 +1021,39 @@ fig21 = plt.figure()
 ax21_1 = fig21.add_subplot(111)
 ax21_1.plot(list(reversed(fO2)), list(reversed(initial_hf182_conc)), linewidth=2.0, color='black', linestyle="-", label="$^{182}$Hf")
 ax21_1.plot(list(reversed(fO2)), list(reversed(initial_conc_w184)), linewidth=2.0, color='black', linestyle="--", label="$^{184}$W")
+ax21_1.axhspan(list(reversed(initial_hf182_conc))[0], list(reversed(initial_hf182_conc))[-1], color='red', alpha=0.2, label='Possible $^{182}$Hf Range')
+ax21_1.axhspan(list(reversed(initial_conc_w184))[0], list(reversed(initial_conc_w184))[-1], color='blue', alpha=0.2, label='Possible $^{184}$W Range')
 ax21_1.set_title("Initial Bulk Concentration on Vesta")
-ax21_1.set_xlabel("$fO_2$")
+ax21_1.set_xlabel("$fO_2$ ($\Delta$IW)")
 ax21_1.set_ylabel("Concentration (ppb)")
 ax21_1.grid()
-ax21_1.legend(loc='center left')
+ax21_1.legend(loc='top right')
 
+print("Lower 182Hf Conc: {}\n"
+      "Upper 182Hf Conc: {}\n"
+      "Lower 182W Conc: {}\n"
+      "Upper 182W Conc: {}\n".format(list(reversed(initial_hf182_conc))[0], list(reversed(initial_hf182_conc))[-1],
+                                     list(reversed(initial_conc_w184))[0], list(reversed(initial_conc_w184))[-1])
+)
+
+
+fig22 = plt.figure()
+ax22_1 = fig22.add_subplot(111)
+ax22_1.plot(fO2, modeled_core_masses_w182, color='black', linestyle="-", linewidth=2.0, label='$^{182}$W')
+ax22_1.plot(fO2, modeled_core_masses_w184, color='black', linestyle="--", linewidth=2.0, label='$^{184}$W')
+# ax22_1.axhspan(modeled_core_masses_w182[0], modeled_core_masses_w182[-1], color='red', alpha=0.2, label='Possible $^{182}$W Range')
+# ax22_1.axhspan(modeled_core_masses_w184[0], modeled_core_masses_w184[-1], color='blue', alpha=0.2, label='Possible $^{184}$W Range')
+ax22_1.set_xlabel("$fO_2$ ($\Delta$IW)")
+ax22_1.set_ylabel("Mass (kg)")
+ax22_1.set_title("Current Modeled Mass of Isotope in Vesta's Core")
+ax22_1.grid()
+ax22_1.legend(loc='upper right')
+
+print("Lower 182Hf Mass: {}\n"
+      "Upper 182Hf Mass: {}\n"
+      "Lower 182W Mass: {}\n"
+      "Upper 182W Mass: {}\n".format(modeled_core_masses_w182[0], modeled_core_masses_w182[-1],
+                                     modeled_core_masses_w184[0], modeled_core_masses_w184[-1])
+)
 
 plt.show()
