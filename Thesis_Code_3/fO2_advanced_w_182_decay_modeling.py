@@ -315,7 +315,7 @@ def decayW184(initial_conc_w184, mass_vesta, mass_vesta_core, core_formation_max
 
     for time_index, time in enumerate(max_modeling_time_range):
         if not time_index == 0:
-            if time < core_formation_max_time:
+            if time <= core_formation_max_time:
                 fraction_core_bulk = fraction_core_accumulated[-1] + core_frac_per_timestep
                 mass_core_at_time = fraction_core_bulk * mass_vesta_core
                 mass_core_added_at_time = mass_core_at_time - mass_core[-1]
@@ -448,10 +448,15 @@ radius_vesta_core = 113 * 1000
 volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
 mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
-initial_hf182_conc = [16.5605, 16.57299, 16.58399, 16.584425]
-initial_conc_w184 = [23.059866, 23.47345, 23.85845, 23.866664]
-# initial_hf182_conc = [16.433865, 16.434248, 16.439563, 16.4539, 16.49013, 16.5605, 16.57299, 16.58399, 16.584425, 16.584556]
-# initial_conc_w184 = [19.533181, 19.54231, 19.669395, 20.0194, 20.96274, 23.059866, 23.47345, 23.85845, 23.866664, 23.87737]
+# initial_hf182_conc = [16.5605210832459, 16.5729732183824, 16.5841924049445, 16.5844264521819]  # favors error at 5 Ma
+initial_hf182_conc = [16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791]  # favors error at 100 Ma
+initial_conc_w184 = [23.059866377644, 23.4734497681415, 23.8585022177912, 23.8666645109862]
+# initial_hf182_conc = [16.4338651, 16.4342491657569, 16.43956335313, 16.45386642757, 16.49013031635, 16.5605210832459,
+#                       16.5729732183824, 16.5841924049445, 16.5844264521819, 16.5847330751006]
+# initial_hf182_conc = [16.4406770761186, 16.4408010539897, 16.4425160968547, 16.4471283859714, 16.458798027854,
+#                       16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791, 16.4890778083013]  # favors error at 100 Ma
+# initial_conc_w184 = [19.533181286, 19.542305421666, 19.669395031966, 20.0194390861, 20.96274041243, 23.059866377644,
+#                      23.4734497681415, 23.8585022177912, 23.8666645109862, 23.8773659956874]
 # terrestrial_standard = 0.864900  # Kleine et al 2017
 terrestrial_standard = 0.864680  # Kleine et al 2004
 time_list = list(np.arange(0, inf_time + timestep, timestep))
@@ -467,6 +472,7 @@ pressure_surf = 0
 radius_body = (262.7 * 1000)
 
 avg_eucrite_w182_w184_ratio = 0.866555125
+avg_eucrite_ep_182w = 21.6857681454408
 # avg_eucrite_epsilon_w182 = 19.13660539
 
 
@@ -968,6 +974,9 @@ for index, i in enumerate(fO2):
 ax17_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax17_2.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax17_3.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax17_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax17_2.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax17_3.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
 ax17_0.spines['top'].set_color('none')
 ax17_0.spines['bottom'].set_color('none')
 ax17_0.spines['left'].set_color('none')
@@ -1048,6 +1057,43 @@ ax22_1.set_ylabel("Mass (kg)")
 ax22_1.set_title("Current Modeled Mass of Isotope in Vesta's Core")
 ax22_1.grid()
 ax22_1.legend(loc='upper right')
+
+fig23 = plt.figure()
+ax23_1 = fig23.add_subplot(111)
+for index, i in enumerate(fO2):
+    ax23_1.plot(time_list_ma, epsilon_bulk[index], label='fO$_2$ = IW{}'.format(i))
+ax23_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax23_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax23_1.grid()
+ax23_1.set_title("$\epsilon^{182}$W On Bulk Vesta Over Time")
+ax23_1.set_xlabel("Time (Ma)")
+ax23_1.set_ylabel("$\epsilon^{182}$W")
+ax23_1.legend(loc='lower right')
+
+fig24 = plt.figure()
+ax24_1 = fig24.add_subplot(111)
+for index, i in enumerate(fO2):
+    ax24_1.plot(time_list_ma[1:], epsilon_core[index], label='fO$_2$ = IW{}'.format(i))
+ax24_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
+ax24_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax24_1.grid()
+ax24_1.set_title("$\epsilon^{182}$W in Vesta's Core Over Time")
+ax24_1.set_xlabel("Time (Ma)")
+ax24_1.set_ylabel("$\epsilon^{182}$W")
+ax24_1.legend(loc='center right')
+
+fig25 = plt.figure()
+ax25_1 = fig25.add_subplot(111)
+for index, i in enumerate(fO2):
+    ax25_1.plot(time_list_ma, epsilon_mantle[index], label='fO$_2$ = IW{}'.format(i))
+ax25_1.axvspan(0, 5, color='red', alpha=0.2, label='Mantle Formation Time')
+ax25_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax25_1.grid()
+ax25_1.set_title("$\epsilon^{182}$W in Vesta's Mantle Over Time")
+ax25_1.set_xlabel("Time (Ma)")
+ax25_1.set_ylabel("$\epsilon^{182}$W")
+ax25_1.legend(loc='lower right')
+
 
 print("Lower 182Hf Mass: {}\n"
       "Upper 182Hf Mass: {}\n"

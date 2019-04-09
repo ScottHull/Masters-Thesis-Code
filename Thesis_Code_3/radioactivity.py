@@ -54,6 +54,7 @@ hf_rel_at_5My = hf_decay[My_5_index]
 al_rel_at_5My = al_decay[My_5_index]
 fe_rel_at_5My = fe_decay[My_5_index]
 
+
 print(1 - hf_rel_at_5My, 1 - al_rel_at_5My, 1 - fe_rel_at_5My)
 print(hf_rel_at_5My, al_rel_at_5My / original_al, fe_rel_at_5My / original_fe)
 
