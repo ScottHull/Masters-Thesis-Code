@@ -475,6 +475,15 @@ avg_eucrite_w182_w184_ratio = 0.866555125
 avg_eucrite_ep_182w = 21.6857681454408
 # avg_eucrite_epsilon_w182 = 19.13660539
 
+avg_chondrite_epsilon_182w = 0
+avg_chondrite_epsilon_182w_err = 0
+avg_eucrite_epsilon_182w = 21.6857681454408
+avg_eucrite_epsilon_182_err = 0
+avg_iiab_iron_meteorite_182w = -3.40
+avg_iiab_iron_meteorite_182w_err = 0
+avg_ivb_iron_meteorite_182w = 0
+avg_ivb_iron_meteorite_182w_err = 0
+
 
 print(
     "Mass Vesta Core: {}\n"
