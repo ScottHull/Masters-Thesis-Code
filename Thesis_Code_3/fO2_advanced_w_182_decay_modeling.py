@@ -457,8 +457,6 @@ initial_conc_w184 = [23.059866377644, 23.4734497681415, 23.8585022177912, 23.866
 #                       16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791, 16.4890778083013]  # favors error at 100 Ma
 # initial_conc_w184 = [19.533181286, 19.542305421666, 19.669395031966, 20.0194390861, 20.96274041243, 23.059866377644,
 #                      23.4734497681415, 23.8585022177912, 23.8666645109862, 23.8773659956874]
-# terrestrial_standard = 0.864900  # Kleine et al 2017
-terrestrial_standard = 0.864680  # Kleine et al 2004
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
 core_formation_max_time_index = time_list.index(core_formation_max_time)
@@ -471,16 +469,17 @@ temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
 
+# terrestrial_standard = 0.864900  # Kleine et al 2017
+terrestrial_standard = 0.864680  # Kleine et al 2004
+
 avg_eucrite_w182_w184_ratio = 0.866555125
 
-avg_chondrite_epsilon_182w = 0
-avg_chondrite_epsilon_182w_err = 0
-avg_eucrite_epsilon_182w = 21.6857681454408
-avg_eucrite_epsilon_182_err = 0
-avg_iiab_iron_meteorite_182w = -3.40
-avg_iiab_iron_meteorite_182w_err = 0
-avg_ivb_iron_meteorite_182w = 0
-avg_ivb_iron_meteorite_182w_err = 0
+epsilon_182w_db = pd.read_excel("epsilon_182w_values.xlsx").set_index("Sample")
+avg_chondrite_epsilon_182 = epsilon_182w_db.loc[["Chondrite"]]['given epsilon 182w'].values[0]
+avg_iiab_iron_meteorite_epsilon_182w = epsilon_182w_db.loc[["IIAB Iron Meteorite"]]['given epsilon 182w'].values[0]
+avg_ivb_iron_meteorite_epsilon_182w = epsilon_182w_db.loc[["IVB Iron Meteorite"]]['given epsilon 182w'].values[0]
+avg_solar_system_initial_epsilon_182w = epsilon_182w_db.loc[["Solar System Initial"]]['given epsilon 182w'].values[0]
+avg_eucrite_epsilon_182w = epsilon_182w_db.loc[["Eucrite"]]['given epsilon 182w'].values[0]
 
 
 print(
@@ -1070,7 +1069,9 @@ ax23_1 = fig23.add_subplot(111)
 for index, i in enumerate(fO2):
     ax23_1.plot(time_list_ma, epsilon_bulk[index], label='fO$_2$ = IW{}'.format(i))
 ax23_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
-ax23_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax23_1.axhline(avg_eucrite_epsilon_182w, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax23_1.axhline(avg_chondrite_epsilon_182, linestyle="--", color='red', linewidth=1.5, label="Avg. Chondrite")
+ax23_1.axhline(avg_solar_system_initial_epsilon_182w, linestyle="--", color='green', linewidth=1.5, label="Avg. SSI")
 ax23_1.grid()
 ax23_1.set_title("$\epsilon^{182}$W On Bulk Vesta Over Time")
 ax23_1.set_xlabel("Time (Ma)")
@@ -1083,6 +1084,11 @@ for index, i in enumerate(fO2):
     ax24_1.plot(time_list_ma[1:], epsilon_core[index], label='fO$_2$ = IW{}'.format(i))
 ax24_1.axvspan(0, 5, color='red', alpha=0.2, label='Core Formation Time')
 ax24_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax24_1.axhline(avg_eucrite_epsilon_182w, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax24_1.axhline(avg_chondrite_epsilon_182, linestyle="--", color='red', linewidth=1.5, label="Avg. Chondrite")
+ax24_1.axhline(avg_solar_system_initial_epsilon_182w, linestyle="--", color='green', linewidth=1.5, label="Avg. SSI")
+ax24_1.axhline(avg_iiab_iron_meteorite_epsilon_182w, linestyle="--", color='orange', linewidth=1.5, label="Avg. IIAB Iron Meteorite")
+ax24_1.axhline(avg_ivb_iron_meteorite_epsilon_182w, linestyle="--", color='orange', linewidth=1.5, label="Avg. IVB Iron Meteorite")
 ax24_1.grid()
 ax24_1.set_title("$\epsilon^{182}$W in Vesta's Core Over Time")
 ax24_1.set_xlabel("Time (Ma)")
@@ -1094,7 +1100,9 @@ ax25_1 = fig25.add_subplot(111)
 for index, i in enumerate(fO2):
     ax25_1.plot(time_list_ma, epsilon_mantle[index], label='fO$_2$ = IW{}'.format(i))
 ax25_1.axvspan(0, 5, color='red', alpha=0.2, label='Mantle Formation Time')
-ax25_1.axhline(21.6857681454408, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax25_1.axhline(avg_eucrite_epsilon_182w, linestyle="--", color='black', linewidth=1.5, label="Avg. Eucrite")
+ax25_1.axhline(avg_chondrite_epsilon_182, linestyle="--", color='red', linewidth=1.5, label="Avg. Chondrite")
+ax25_1.axhline(avg_solar_system_initial_epsilon_182w, linestyle="--", color='green', linewidth=1.5, label="Avg. SSI")
 ax25_1.grid()
 ax25_1.set_title("$\epsilon^{182}$W in Vesta's Mantle Over Time")
 ax25_1.set_xlabel("Time (Ma)")
