@@ -450,21 +450,21 @@ mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
 # initial_hf182_conc = [16.5605210832459, 16.5729732183824, 16.5841924049445, 16.5844264521819]  # favors error at 5 Ma
 initial_hf182_conc = [16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791]  # favors error at 100 Ma
-# initial_conc_w184 = [23.059866377644, 23.4734497681415, 23.8585022177912, 23.8666645109862]
+initial_conc_w184 = [23.059866377644, 23.4734497681415, 23.8585022177912, 23.8666645109862]
 # initial_hf182_conc = [16.4338651, 16.4342491657569, 16.43956335313, 16.45386642757, 16.49013031635, 16.5605210832459,
 #                       16.5729732183824, 16.5841924049445, 16.5844264521819, 16.5847330751006]
-initial_hf182_conc = [16.4406770761186, 16.4408010539897, 16.4425160968547, 16.4471283859714, 16.458798027854,
-                      16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791, 16.4890778083013]  # favors error at 100 Ma
-initial_conc_w184 = [19.533181286, 19.542305421666, 19.669395031966, 20.0194390861, 20.96274041243, 23.059866377644,
-                     23.4734497681415, 23.8585022177912, 23.8666645109862, 23.8773659956874]
+# initial_hf182_conc = [16.4406770761186, 16.4408010539897, 16.4425160968547, 16.4471283859714, 16.458798027854,
+#                       16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791, 16.4890778083013]  # favors error at 100 Ma
+# initial_conc_w184 = [19.533181286, 19.542305421666, 19.669395031966, 20.0194390861, 20.96274041243, 23.059866377644,
+#                      23.4734497681415, 23.8585022177912, 23.8666645109862, 23.8773659956874]
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
 core_formation_max_time_index = time_list.index(core_formation_max_time)
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-# fO2 = [-0.8, -1.10, -2.25, -2.45]
-fO2 = [3.5, 2.0, 1.0, 0.5, 0, -0.8, -1.10, -2.25, -2.45, -3.5]
+fO2 = [-0.8, -1.10, -2.25, -2.45]
+# fO2 = [3.5, 2.0, 1.0, 0.5, 0, -0.8, -1.10, -2.25, -2.45, -3.5]
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
@@ -1108,39 +1108,6 @@ ax25_1.set_title("$\epsilon^{182}$W in Vesta's Mantle Over Time")
 ax25_1.set_xlabel("Time (Ma)")
 ax25_1.set_ylabel("$\epsilon^{182}$W")
 ax25_1.legend(loc='lower right')
-
-fig26 = plt.figure()
-ax26_1 = fig26.add_subplot(111)
-ax26_1.plot(fO2, [i[-1] for i in epsilon_bulk], linewidth=2.0, color='black')
-ax26_1.grid()
-ax26_1.set_title("$\epsilon^{182}$W On Bulk Vesta")
-ax26_1.set_xlabel("$fO_2$ ($\Delta$IW)")
-ax26_1.set_ylabel("$\epsilon^{182}$W")
-ax26_1.legend(loc='lower right')
-
-fig27 = plt.figure()
-ax27_1 = fig27.add_subplot(111)
-ax27_1.plot(fO2, [i[-1] for i in epsilon_mantle], linewidth=2.0, color='black')
-ax27_1.grid()
-ax27_1.set_title("$\epsilon^{182}$W In Vesta's Mantle")
-ax27_1.set_xlabel("$fO_2$ ($\Delta$IW)")
-ax27_1.set_ylabel("$\epsilon^{182}$W")
-ax27_1.legend(loc='lower right')
-
-fig28 = plt.figure()
-ax28_1 = fig28.add_subplot(111)
-ax28_1.plot(fO2, [i[-1] for i in epsilon_core], linewidth=2.0, color='black')
-ax28_1.grid()
-ax28_1.set_title("$\epsilon^{182}$W In Vesta's Core")
-ax28_1.set_xlabel("$fO_2$ ($\Delta$IW)")
-ax28_1.set_ylabel("$\epsilon^{182}$W")
-ax28_1.legend(loc='lower right')
-
-
-
-epsilon_samples = ['Vesta Bulk (modeled)', 'Vesta Core (modeled)', 'Vesta Mantle (modeled)', 'Avg. Eucrite',
-                   'Avg. Chondrite', 'Avg. IIAB Iron Meteorite', 'Avg. IVB Iron Meteorite', 'Avg. SSI']
-epsilon_samples_values = [epsilon_bulk[0][-1]]
 
 
 print("Lower 182Hf Mass: {}\n"
