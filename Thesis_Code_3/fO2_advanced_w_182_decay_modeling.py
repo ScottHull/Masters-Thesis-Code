@@ -449,22 +449,22 @@ volume_vesta_core = (4/3) * pi * (radius_vesta_core**3)
 mass_vesta_core = density_metal * volume_vesta_core
 mass_vesta_mantle = mass_vesta - mass_vesta_core
 # initial_hf182_conc = [16.5605210832459, 16.5729732183824, 16.5841924049445, 16.5844264521819]  # favors error at 5 Ma
-initial_hf182_conc = [16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791]  # favors error at 100 Ma
-initial_conc_w184 = [23.059866377644, 23.4734497681415, 23.8585022177912, 23.8666645109862]
+# initial_hf182_conc = [16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791]  # favors error at 100 Ma
+# initial_conc_w184 = [23.059866377644, 23.4734497681415, 23.8585022177912, 23.8666645109862]
 # initial_hf182_conc = [16.4338651, 16.4342491657569, 16.43956335313, 16.45386642757, 16.49013031635, 16.5605210832459,
 #                       16.5729732183824, 16.5841924049445, 16.5844264521819, 16.5847330751006]  # favors error at 5 Ma
-# initial_hf182_conc = [16.4406770761186, 16.4408010539897, 16.4425160968547, 16.4471283859714, 16.458798027854,
-#                       16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791, 16.4890778083013]  # favors error at 100 Ma
-# initial_conc_w184 = [19.533181286, 19.542305421666, 19.669395031966, 20.0194390861, 20.96274041243, 23.059866377644,
-#                      23.4734497681415, 23.8585022177912, 23.8666645109862, 23.8773659956874]
+initial_hf182_conc = [16.4406770761186, 16.4408010539897, 16.4425160968547, 16.4471283859714, 16.458798027854,
+                      16.4813505716848, 16.4853265752236, 16.4889054211909, 16.4889800456791, 16.4890778083013]  # favors error at 100 Ma
+initial_conc_w184 = [19.533181286, 19.542305421666, 19.669395031966, 20.0194390861, 20.96274041243, 23.059866377644,
+                     23.4734497681415, 23.8585022177912, 23.8666645109862, 23.8773659956874]
 time_list = list(np.arange(0, inf_time + timestep, timestep))
 time_list_ma = [i / (10**6) for i in list(np.arange(0, inf_time + timestep, timestep))]
 core_formation_max_time_index = time_list.index(core_formation_max_time)
 gravity = 0.25
 thermal_expansivity = 6 * (10**(-5))
 heat_capacity = (10**3)
-fO2 = [-0.8, -1.10, -2.25, -2.45]
-# fO2 = [3.5, 2.0, 1.0, 0.5, 0, -0.8, -1.10, -2.25, -2.45, -3.5]
+# fO2 = [-0.8, -1.10, -2.25, -2.45]
+fO2 = [3.5, 2.0, 1.0, 0.5, 0, -0.8, -1.10, -2.25, -2.45, -3.5]
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
@@ -1144,6 +1144,18 @@ ax28_1.set_xlabel("$fO_2$ ($\Delta$IW)")
 ax28_1.set_ylabel("$\epsilon^{182}$W")
 ax28_1.legend(loc='lower right')
 
+fig29 = plt.figure()
+ax29_1 = fig29.add_subplot(111)
+ax29_1.plot(fO2, [i[-1] for i in bulk_core_conc_w182_list], color='black', linestyle="-", linewidth=2.0, label='$^{182}$W')
+ax29_1.plot(fO2, [i[-1] for i in bulk_core_conc_w184_list], color='black', linestyle="--", linewidth=2.0, label='$^{184}$W')
+# ax29_1.axhspan(modeled_core_masses_w182[0], modeled_core_masses_w182[-1], color='red', alpha=0.2, label='Possible $^{182}$W Range')
+# ax29_1.axhspan(modeled_core_masses_w184[0], modeled_core_masses_w184[-1], color='blue', alpha=0.2, label='Possible $^{184}$W Range')
+ax29_1.set_xlabel("$fO_2$ ($\Delta$IW)")
+ax29_1.set_ylabel("Concentration (ppb)")
+ax29_1.set_title("Current Concentration of Isotope in Vesta's Core")
+ax29_1.grid()
+ax29_1.legend(loc='upper right')
+
 
 
 epsilon_samples = ['Vesta Bulk (modeled)', 'Vesta Core (modeled)', 'Vesta Mantle (modeled)', 'Avg. Eucrite',
@@ -1157,5 +1169,15 @@ print("Lower 182Hf Mass: {}\n"
       "Upper 182W Mass: {}\n".format(modeled_core_masses_w182[0], modeled_core_masses_w182[-1],
                                      modeled_core_masses_w184[0], modeled_core_masses_w184[-1])
 )
+
+print("Upper epsilon 182W bulk: {}\n"
+      "Lower epsilon 182W bulk: {}\n".format(max([i[-1] for i in epsilon_bulk]), min([i[-1] for i in epsilon_bulk])))
+print("Upper epsilon 182W core: {}\n"
+      "Lower epsilon 182W core: {}\n".format(max([i[-1] for i in epsilon_core]), min([i[-1] for i in epsilon_core])))
+
+print("Epsilon Bulk Difference from Chondrite: {}\n".format(avg_chondrite_epsilon_182 - max([i[-1] for i in epsilon_bulk])))
+print("Epsilon Bulk Difference from IIAB: {}\n".format(avg_iiab_iron_meteorite_epsilon_182w - max([i[-1] for i in epsilon_core])))
+print("Epsilon Bulk Difference from IVB: {}\n".format(avg_ivb_iron_meteorite_epsilon_182w - max([i[-1] for i in epsilon_core])))
+
 
 plt.show()

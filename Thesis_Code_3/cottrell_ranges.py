@@ -22,14 +22,14 @@ def collectCoeffsSimple(pressure, temperature):
           'epsilon': 0
     }
 
-    if 0 <= pressure <= 2:
+    if 0 <= pressure <= 3:
         coeffs['alpha'] = 1.11
         coeffs['beta'] = -1.18
         coeffs['chi'] = -0.85
         coeffs['delta'] = 1680
         coeffs['epsilon'] = 487
 
-    elif 2 < pressure:
+    elif 3 < pressure:
         coeffs['alpha'] = 1.05
         coeffs['beta'] = -1.10
         coeffs['chi'] = -0.84
@@ -93,6 +93,8 @@ w_diffusivity = 10**-8
 thermal_expansivity = 6 * 10**(-5)
 heat_capacity = 10**3
 
+earth_z_eq_eta_35_actual = 23.93
+earth_z_eq_eta_10_actual = 62.97
 
 earth_adiabatic_depths, earth_adiabatic = adiabat(
     current_depth=0 / 1000,  # begin at surface
@@ -261,6 +263,10 @@ ax3_1.plot(earth_hydrostatic_depths, cottrell_model_earth[0], color='black')
 ax3_1.plot(earth_hydrostatic_depths, cottrell_model_earth[1], color='black')
 ax3_1.fill_between(earth_hydrostatic_depths, cottrell_model_earth[0], cottrell_model_earth[1], color='red', alpha=0.4,
                    label="Earth Oxidizing Model")
+ax3_1.axvline(earth_z_eq_eta_10_actual, linewidth=2.0, linestyle="--", color='black', label="z$_{eq}$ ($\eta$=10$^{-1.0}$)")
+ax3_1.axvline(earth_z_eq_eta_35_actual, linewidth=2.0, linestyle="--", color='red', label="z$_{eq}$ ($\eta$=10$^{-3.5}$)")
+ax3_2.axvline(earth_z_eq_eta_10_actual, linewidth=2.0, linestyle="--", color='black', label="z$_{eq}$ ($\eta$=10$^{-1.0}$)")
+ax3_2.axvline(earth_z_eq_eta_35_actual, linewidth=2.0, linestyle="--", color='red', label="z$_{eq}$ ($\eta$=10$^{-3.5}$)")
 ax3_1.grid()
 ax3_1.legend(loc='upper right')
 ax3_2.plot(earth_hydrostatic_depths, cottrell_model_earth[2], color='black')

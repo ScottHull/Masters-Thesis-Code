@@ -22,14 +22,14 @@ def collectCoeffsSimple(pressure, temperature):
           'epsilon': 0
     }
 
-    if 0 <= pressure <= 2:
+    if 0 <= pressure <= 3:
         coeffs['alpha'] = 1.11
         coeffs['beta'] = -1.18
         coeffs['chi'] = -0.85
         coeffs['delta'] = 1680
         coeffs['epsilon'] = 487
 
-    elif 2 < pressure:
+    elif 3 < pressure:
         coeffs['alpha'] = 1.05
         coeffs['beta'] = -1.10
         coeffs['chi'] = -0.84

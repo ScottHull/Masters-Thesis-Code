@@ -191,7 +191,10 @@ w_at_wt = 183.84
 modeled_mass_w182_in_vesta_core_08 = 10901550702.125
 modeled_mass_w182_in_vesta_core_110 = 11973303629.4755
 modeled_mass_w182_in_vesta_core_225 = 12938743437.6168
-modeled_mass_w182_in_vesta_core_245 = 12959044131.1024
+modeled_mass_w182_in_vesta_core_245 = 12959044131.
+
+earth_z_eq_eta_35_actual = 23.93
+earth_z_eq_eta_10_actual = 62.97
 
 
 
