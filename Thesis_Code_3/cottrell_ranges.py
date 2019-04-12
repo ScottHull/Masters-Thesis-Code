@@ -261,7 +261,7 @@ ax3_0.set_ylabel("D")
 ax3_0.set_title("Predicted Partition Coefficients for an Earth Magma Ocean")
 ax3_1.plot(earth_hydrostatic_depths, cottrell_model_earth[0], color='black')
 ax3_1.plot(earth_hydrostatic_depths, cottrell_model_earth[1], color='black')
-ax3_1.fill_between(earth_hydrostatic_depths, cottrell_model_earth[0], cottrell_model_earth[1], color='red', alpha=0.4,
+ax3_1.fill_between(earth_hydrostatic_depths, cottrell_model_earth[0], cottrell_model_earth[1], color='red', alpha=0.5,
                    label="Earth Oxidizing Model")
 ax3_1.axvline(earth_z_eq_eta_10_actual, linewidth=2.0, linestyle="--", color='black', label="z$_{eq}$ ($\eta$=10$^{-1.0}$)")
 ax3_1.axvline(earth_z_eq_eta_35_actual, linewidth=2.0, linestyle="--", color='red', label="z$_{eq}$ ($\eta$=10$^{-3.5}$)")
@@ -271,7 +271,7 @@ ax3_1.grid()
 ax3_1.legend(loc='upper right')
 ax3_2.plot(earth_hydrostatic_depths, cottrell_model_earth[2], color='black')
 ax3_2.plot(earth_hydrostatic_depths, cottrell_model_earth[3], color='black')
-ax3_2.fill_between(earth_hydrostatic_depths, cottrell_model_earth[2], cottrell_model_earth[3], color='red', alpha=0.4,
+ax3_2.fill_between(earth_hydrostatic_depths, cottrell_model_earth[2], cottrell_model_earth[3], color='red', alpha=0.5,
                    label="Earth Reducing Model")
 ax3_2.grid()
 ax3_2.legend(loc='upper right')
