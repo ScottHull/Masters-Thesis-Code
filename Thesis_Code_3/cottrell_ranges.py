@@ -93,8 +93,8 @@ w_diffusivity = 10**-8
 thermal_expansivity = 6 * 10**(-5)
 heat_capacity = 10**3
 
-earth_z_eq_eta_35_actual = 23.93
-earth_z_eq_eta_10_actual = 62.97
+earth_z_eq_eta_35_actual = 23.93 / 1000
+earth_z_eq_eta_10_actual = 62.97 / 1000
 
 earth_adiabatic_depths, earth_adiabatic = adiabat(
     current_depth=0 / 1000,  # begin at surface
