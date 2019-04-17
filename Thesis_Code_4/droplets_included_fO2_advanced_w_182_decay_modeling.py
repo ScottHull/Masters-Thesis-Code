@@ -22,9 +22,38 @@ def calcAdiabaticTemperature(thermal_expansivity, heat_capacity, surface_tempera
     t = surface_temperature + ((thermal_expansivity * gravity * surface_temperature * depth) / heat_capacity)
     return t
 
-def droplet_mass_conc(droplet_radius, density_metal):
+def droplet_mass(droplet_radius, density_metal):
     droplet_volume = (4 / 3) * pi * (droplet_radius**3)
     droplet_mass = droplet_volume * density_metal
+    return droplet_mass
+
+def silicate_mass(length, width, z_eq, density_silicate):
+    silicate_volume = length * width * z_eq
+    silicate_mass = silicate_volume * density_silicate
+    return silicate_mass
+
+def droplet_volumetric_conc(metal_conc, droplet_radius, density_metal):
+    droplet_volume = (4 / 3) * pi * (droplet_radius**3)
+    mass = droplet_mass(droplet_radius=droplet_radius, density_metal=density_metal)
+    w_in_droplet = mass * (metal_conc * (10**-9))
+    volumetric_conc = w_in_droplet / droplet_volume
+    return volumetric_conc
+
+def silicate_volumetric_conc(length, width, z_eq, silicate_conc, density_silicate):
+    silicate_volume = length * width * z_eq
+    mass = silicate_mass(length=length, width=width, z_eq=z_eq, density_silicate=density_silicate)
+    w_in_silicate = mass * (silicate_conc * (10**-9))
+    volumetric_conc = w_in_silicate / silicate_volume
+    return volumetric_conc
+
+def mass_per_droplet(volume_core_added_at_timestep, droplet_radius, w182_mass_added_at_timestep,
+                     w184_mass_added_at_timestep):
+    droplet_volume = (4 / 3) * pi * (droplet_radius**3)
+    num_dropets = volume_core_added_at_timestep / droplet_volume
+    mass_w182_per_droplet = w182_mass_added_at_timestep / num_dropets
+    mass_w184_per_droplet = w184_mass_added_at_timestep / num_dropets
+    return mass_w182_per_droplet, mass_w184_per_droplet
+
 
 
 def collectCoeffsSimple(pressure, temperature):
@@ -513,7 +542,6 @@ bulk_mantle_conc_w184_list = []
 bulk_core_conc_w184_list = []
 
 
-
 for index, i in enumerate(fO2):
     hf182_conc = initial_hf182_conc[index]
     w_184_conc = initial_conc_w184[index]
@@ -612,6 +640,11 @@ for index, i in enumerate(fO2):
     modeled_core_masses_w182.append(cm_182w)
     modeled_core_masses_w184.append(cm_184w)
 
+
+single_droplet_w182_mass = []
+single_droplet_w184_mass = []
+for i in core_mass_added:
+    single_droplet_w182_mass_per_time, single_droplet_w184_mass_per_time = mass_per_droplet(volume_core_added_at_timestep=i * density_metal, droplet_radius=)
 
 # fig1 = plt.figure()
 # ax1 = fig1.add_subplot(111)
