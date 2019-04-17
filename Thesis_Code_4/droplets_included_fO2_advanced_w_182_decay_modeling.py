@@ -22,6 +22,11 @@ def calcAdiabaticTemperature(thermal_expansivity, heat_capacity, surface_tempera
     t = surface_temperature + ((thermal_expansivity * gravity * surface_temperature * depth) / heat_capacity)
     return t
 
+def droplet_mass_conc(droplet_radius, density_metal):
+    droplet_volume = (4 / 3) * pi * (droplet_radius**3)
+    droplet_mass = droplet_volume * density_metal
+
+
 def collectCoeffsSimple(pressure, temperature):
 
     # pressure in GPa
