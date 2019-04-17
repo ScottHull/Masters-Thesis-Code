@@ -31,7 +31,7 @@ def frac_eq(radius, diffusivity, settling_velocity, dynamic_viscosity, z, densit
     kinematic_viscosity = dynamic_viscosity / density_melt
     num = -0.996 * (diffusivity**(2/3)) * z
     den = ((2 * radius)**(3/2)) * (settling_velocity**(1/2)) * (kinematic_viscosity**(1/6))
-    f = 1 - exp(num / den)
+    f = (1 - exp(num / den))
     return f
 
 
@@ -111,7 +111,7 @@ ax2.plot([i for i in radii], frac_eq_earth_list[0], linewidth=2.0, color='red', 
 ax2.plot([i for i in radii], frac_eq_vesta_list[1], linewidth=2.0, color='blue', linestyle="--", label="Vesta (g=0.25 m/s$^2$, $\eta$=10$^{-1.0}$)")
 ax2.plot([i for i in radii], frac_eq_earth_list[1], linewidth=2.0, color='red', linestyle="--", label="Earth (g=9.80 m/s$^2$, $\eta$=10$^{-1.0}$)")
 ax2.set_xlabel("Droplet Radius (m)")
-ax2.set_ylabel("Fraction Equilibrated (%)")
+ax2.set_ylabel("Fraction of Chemical Equilibration")
 ax2.set_title("Fraction of Metal-Silicate Chemical Equilibrium as a Function of Droplet Radius")
 ax2.grid()
 ax2.legend(loc='lower left')
