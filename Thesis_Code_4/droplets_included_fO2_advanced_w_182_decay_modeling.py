@@ -102,6 +102,13 @@ def calcEpsilon182W(w182_at_time, w184_at_time, terretrial_standard):
     epsilon = (((w182_at_time / w184_at_time) / terretrial_standard) - 1) * (10**4)
     return epsilon
 
+def rFromWeberTurbulent(density_melt, density_droplet, gravity, Cd=0.2, weber_number=10, surface_tension=1):
+    # Rubie et al 2003 suggests We=10 for stable droplet sizes
+    # Rubie et al 2003 suggests a surface tension/metal-silicate interface energy of sigma=1 N/m^2
+    r = sqrt(weber_number * (((16 * gravity * (density_droplet - density_melt)) / (3 * Cd * surface_tension)) *
+                        ((density_droplet - density_melt) / density_melt))**(-1))
+    return r
+
 
 def decayW182(timestep, core_formation_max_time, inf_time, w182_at_wt, hf182_half_life, hf182_at_wt,
               initial_hf182_conc, mass_vesta, mass_vesta_core, density_metal, density_melt, fO2,
@@ -502,6 +509,7 @@ fO2 = [3.5, 2.0, 1.0, 0.5, 0, -0.8, -1.10, -2.25, -2.45, -3.5]
 temperature_surf = 2000
 pressure_surf = 0
 radius_body = (262.7 * 1000)
+vesta_droplet_radius = rFromWeberTurbulent(density_melt=density_melt, density_droplet=density_metal, gravity=gravity)
 
 # terrestrial_standard = 0.864900  # Kleine et al 2017
 terrestrial_standard = 0.864680  # Kleine et al 2004
@@ -541,6 +549,9 @@ bulk_core_conc_w182_list = []
 bulk_mantle_conc_w184_list = []
 bulk_core_conc_w184_list = []
 
+single_droplet_w182_mass_list = []
+single_droplet_w184_mass_list = []
+core_mass_added_list = []
 
 for index, i in enumerate(fO2):
     hf182_conc = initial_hf182_conc[index]
@@ -616,6 +627,28 @@ for index, i in enumerate(fO2):
     bulk_mantle_conc_w184_list.append(mantle_bulk_conc_184w)
     bulk_core_conc_w184_list.append(core_bulk_conc_184w)
 
+    single_droplet_w182_mass_list_temp = []
+    single_droplet_w184_mass_list_temp = []
+    for index2, j in enumerate(core_mass_added):
+        if index2 == 0:
+            core_mass_added_list = core_mass_added
+        else:
+            if index2 <= core_formation_max_time_index:
+                volume_metal_added = j * density_metal
+                conc_w182_to_core = core_conc_182w_added[index2]
+                mass_w182_to_core = j * (conc_w182_to_core * (10**9))
+                mass_w184_to_core = core_mass_w184_added[index2]
+                print("************************************************")
+                print(mass_w182_to_core, mass_w184_to_core)
+                single_droplet_w182_mass, single_droplet_w184_mass = mass_per_droplet(
+                    volume_core_added_at_timestep=volume_metal_added, droplet_radius=vesta_droplet_radius,
+                    w182_mass_added_at_timestep=mass_w182_to_core, w184_mass_added_at_timestep=mass_w184_to_core)
+                single_droplet_w182_mass_list_temp.append(single_droplet_w182_mass)
+                single_droplet_w184_mass_list_temp.append(single_droplet_w184_mass)
+    single_droplet_w182_mass_list.append(single_droplet_w182_mass_list_temp)
+    single_droplet_w184_mass_list.append(single_droplet_w184_mass_list_temp)
+
+
     print("fO2: {}, 182W/184W: {}, Eucrite 182W/184W: {}\n".format(i, mantle_w182_w184_ratios[-1][-1], avg_eucrite_w182_w184_ratio))
 
 
@@ -640,11 +673,6 @@ for index, i in enumerate(fO2):
     modeled_core_masses_w182.append(cm_182w)
     modeled_core_masses_w184.append(cm_184w)
 
-
-single_droplet_w182_mass = []
-single_droplet_w184_mass = []
-for i in core_mass_added:
-    single_droplet_w182_mass_per_time, single_droplet_w184_mass_per_time = mass_per_droplet(volume_core_added_at_timestep=i * density_metal, droplet_radius=)
 
 # fig1 = plt.figure()
 # ax1 = fig1.add_subplot(111)
@@ -1258,6 +1286,8 @@ ax33_1.scatter(fO2, [i[-1] for i in epsilon_mantle], color='green', marker='s', 
 ax33_1.scatter(fO2, [i[-1] for i in epsilon_bulk], color='red', marker='o', s=50, label='Bulk')
 ax33_2.plot(fO2, [i[-1] for i in epsilon_core], color='blue')
 ax33_2.scatter(fO2, [i[-1] for i in epsilon_core], color='blue', marker='^', s=50, label="Core")
+ax33_1.grid()
+ax33_2.grid()
 ax33_0.spines['top'].set_color('none')
 ax33_0.spines['bottom'].set_color('none')
 ax33_0.spines['left'].set_color('none')
@@ -1268,6 +1298,20 @@ ax33_0.yaxis.labelpad = 20
 ax33_0.set_title("$\epsilon$$^{182}$W as a Function of $fO_2$ within Vesta (Present Day)")
 ax33_0.set_xlabel("$fO_2$ ($\Delta$IW)")
 ax33_0.set_ylabel("$\epsilon$$^{182}$W")
+
+fig34 = plt.figure()
+ax34_1 = fig34.add_subplot(111)
+for index, i in enumerate(fO2):
+    ax34_1.plot(time_list_ma[0:core_formation_max_time_index], single_droplet_w182_mass_list[index], linewidth=2.0,
+                label=("$^{182}$W ($\Delta$IW " + str(i) + ")"))
+    ax34_1.plot(time_list_ma[0:core_formation_max_time_index], single_droplet_w184_mass_list[index], linewidth=2.0,
+                label=("$^{184}$W ($\Delta$IW " + str(i) + ")"))
+ax34_1.grid()
+ax34_1.set_title("Single Droplet $^{182}$W and $^{182}$W Mass Over Time")
+ax34_1.set_xlabel("Time (Ma)")
+ax34_1.set_ylabel("Mass (kg)")
+ax34_1.legend(loc='lower right')
+
 
 
 
