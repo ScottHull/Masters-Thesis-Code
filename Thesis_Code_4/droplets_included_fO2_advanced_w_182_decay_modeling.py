@@ -1302,12 +1302,10 @@ ax33_0.set_ylabel("$\epsilon$$^{182}$W")
 fig34 = plt.figure()
 ax34_1 = fig34.add_subplot(111)
 for index, i in enumerate(fO2):
-    ax34_1.plot(time_list_ma[0:core_formation_max_time_index], single_droplet_w182_mass_list[index], linewidth=2.0,
-                label=("$^{182}$W ($\Delta$IW " + str(i) + ")"))
-    ax34_1.plot(time_list_ma[0:core_formation_max_time_index], single_droplet_w184_mass_list[index], linewidth=2.0,
-                label=("$^{184}$W ($\Delta$IW " + str(i) + ")"))
+    ax34_1.plot(time_list_ma[0:core_formation_max_time_index], [j / k for j, k in zip(single_droplet_w182_mass_list[index], single_droplet_w184_mass_list[index])], linewidth=2.0,
+                label=("$^{182}$W/$^{184}$W ($\Delta$IW " + str(i) + ")"))
 ax34_1.grid()
-ax34_1.set_title("Single Droplet $^{182}$W and $^{182}$W Mass Over Time")
+ax34_1.set_title("Single Droplet $^{182}$W and $^{184}$W Mass Over Time")
 ax34_1.set_xlabel("Time (Ma)")
 ax34_1.set_ylabel("Mass (kg)")
 ax34_1.legend(loc='lower right')
