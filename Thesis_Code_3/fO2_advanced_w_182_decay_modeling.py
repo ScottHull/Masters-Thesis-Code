@@ -1312,6 +1312,32 @@ ax37_2.grid()
 ax37_1.legend(loc='lower right')
 ax37_2.legend(loc='lower right')
 
+fig38 = plt.figure()
+ax38_0 = fig38.add_subplot(111)
+ax38_1 = fig38.add_subplot(211)
+ax38_2 = fig38.add_subplot(212)
+ax38_1.plot(fO2, [i[core_formation_max_time_index] for i in epsilon_mantle], color='black', linestyle="-", linewidth=2.0, label="Mantle")
+ax38_1.plot(fO2, [i[core_formation_max_time_index] for i in epsilon_bulk], color='black', linestyle="--", linewidth=2.0, label="Bulk")
+ax38_2.plot(fO2, [i[core_formation_max_time_index] for i in epsilon_core], color='black', linestyle="-", linewidth=2.0, label="Core")
+ax38_1.axvspan(-2.45, -2.25, color='blue', alpha=0.2, label='Reducing Model')
+ax38_1.axvspan(-1.10, -0.8, color='red', alpha=0.2, label='Oxidizing Model')
+ax38_2.axvspan(-2.45, -2.25, color='blue', alpha=0.2, label='Reducing Model')
+ax38_2.axvspan(-1.10, -0.8, color='red', alpha=0.2, label='Oxidizing Model')
+ax38_0.spines['top'].set_color('none')
+ax38_0.spines['bottom'].set_color('none')
+ax38_0.spines['left'].set_color('none')
+ax38_0.spines['right'].set_color('none')
+ax38_0.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax38_0.xaxis.labelpad = 20
+ax38_0.yaxis.labelpad = 20
+ax38_0.set_title("$\epsilon$$^{182}$W in Vesta (5 Ma)")
+ax38_0.set_xlabel("$fO_2$ ($\Delta$IW)")
+ax38_0.set_ylabel("$\epsilon$$^{182}$W")
+ax38_1.grid()
+ax38_2.grid()
+ax38_1.legend(loc='lower right')
+ax38_2.legend(loc='lower right')
+
 
 
 epsilon_samples = ['Vesta Bulk (modeled)', 'Vesta Core (modeled)', 'Vesta Mantle (modeled)', 'Avg. Eucrite',
