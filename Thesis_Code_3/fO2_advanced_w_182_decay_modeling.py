@@ -588,15 +588,34 @@ for index, i in enumerate(fO2):
 
 w182_mantle_dict = {'time': time_list[0:core_formation_max_time_index + 1]}
 w184_mantle_dict = {'time': time_list[0:core_formation_max_time_index + 1]}
+epsilon_w182_5ma_dict = {'time': [time_list[core_formation_max_time_index] for i in fO2]}
+epsilon_w182_100ma_dict = {'time': [time_list[-1] for i in fO2]}
 for index, i in enumerate(fO2):
     temp_mantle_w182 = {'fO2_{}'.format(i): bulk_mantle_conc_w182_list[index][0:core_formation_max_time_index + 1]}
     temp_mantle_w184 = {'fO2_{}'.format(i): bulk_mantle_conc_w184_list[index][0:core_formation_max_time_index + 1]}
+    temp_epsilon_w182_5my = {
+        'mantle-fO2_{}'.format(i): epsilon_mantle[index][core_formation_max_time_index + 1],
+        'core-fO2_{}'.format(i): epsilon_core[index][core_formation_max_time_index],
+        'bulk-fO2_{}'.format(i): epsilon_bulk[index][core_formation_max_time_index],
+    }
+    temp_epsilon_w182_100my = {
+        'mantle-fO2_{}'.format(i): epsilon_mantle[index][-1],
+        'core-fO2_{}'.format(i): epsilon_core[index][-1],
+        'bulk-fO2_{}'.format(i): epsilon_bulk[index][-1],
+    }
     w182_mantle_dict.update(temp_mantle_w182)
     w184_mantle_dict.update(temp_mantle_w184)
+    epsilon_w182_5ma_dict.update(temp_epsilon_w182_5my)
+    epsilon_w182_100ma_dict.update(temp_epsilon_w182_100my)
 w182_df = pd.DataFrame(w182_mantle_dict)
 w184_df = pd.DataFrame(w184_mantle_dict)
+epsilon_w182_5ma_df = pd.DataFrame(epsilon_w182_5ma_dict)
+epsilon_w182_100ma_df = pd.DataFrame(epsilon_w182_100ma_dict)
 w182_df.to_csv("182w_mantle.csv")
 w184_df.to_csv("184w_mantle.csv")
+epsilon_w182_5ma_df.to_csv("epsilon_182w_5ma.csv")
+epsilon_w182_100ma_df.to_csv("epsilon_182w_100ma.csv")
+
 
 
 modeled_core_masses_w182 = []
