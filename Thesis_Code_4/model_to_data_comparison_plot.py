@@ -146,34 +146,44 @@ epsilon_w182_100ma_dict['bulk']['name'].append("Chondrite")
 
 
 
-y_val_1 = 2
+y_val_2 = 2
 
-# bax = brokenaxes(xlims=((-10000, -5500), (-500, 1000)), hspace=.05, despine=False)
-# for index, i in enumerate(epsilon_w182_5ma_dict['core']['epsilon_182w']):
-#     epsilon = epsilon_w182_5ma_dict['core']['epsilon_182w'][index]
-#     name = epsilon_w182_5ma_dict['core']['name'][index]
-#     bax.scatter(epsilon, y_val_1, marker='^', s=80, color='blue')
-#     bax.annotate(name, (epsilon + 120, y_val_1 - 0.4))
-#     y_val_1 += 2
-# for index, i in enumerate(epsilon_w182_5ma_dict['mantle']['epsilon_182w']):
-#     epsilon = epsilon_w182_5ma_dict['mantle']['epsilon_182w'][index]
-#     name = epsilon_w182_5ma_dict['mantle']['name'][index]
-#     bax.scatter(epsilon, y_val_1, marker='s', s=80, color='green')
-#     bax.annotate(name, (epsilon + 120, y_val_1 - 0.4))
-#     y_val_1 += 2
-# for index, i in enumerate(epsilon_w182_5ma_dict['bulk']['epsilon_182w']):
-#     epsilon = epsilon_w182_5ma_dict['bulk']['epsilon_182w'][index]
-#     name = epsilon_w182_5ma_dict['bulk']['name'][index]
-#     bax.scatter(epsilon, y_val_1, marker='o', s=80, color='red')
-#     bax.annotate(name, (epsilon + 120, y_val_1 - 0.4))
-#     y_val_1 += 2
-#
-# axs = [i.yaxis.set_major_formatter(plt.NullFormatter()) for i in bax.axs]
-# axs = [i.yaxis.set_ticks_position('none')  for i in bax.axs]
-#
-# bax.set_title("$\epsilon$$^{182}$W at Time $t=5$" Ma)
-# bax.set_xlabel("$\epsilon$$^{182}$W")
-# bax.big_ax.xaxis.labelpad = 40
+bax2 = brokenaxes(xlims=((-10000, -5500), (-500, 1000)), hspace=.05, despine=False)
+for index, i in enumerate(epsilon_w182_5ma_dict['core']['epsilon_182w']):
+    epsilon = epsilon_w182_5ma_dict['core']['epsilon_182w'][index]
+    name = epsilon_w182_5ma_dict['core']['name'][index]
+    if "IW" in name:
+        bax2.scatter(epsilon, y_val_2, marker='D', s=80, color='blue')
+    else:
+        bax2.scatter(epsilon, y_val_2, marker='D', s=80, color='blue', facecolors="none")
+    bax2.annotate(name, (epsilon + 100, y_val_2 - 0.4))
+    y_val_2 += 2
+for index, i in enumerate(epsilon_w182_5ma_dict['mantle']['epsilon_182w']):
+    epsilon = epsilon_w182_5ma_dict['mantle']['epsilon_182w'][index]
+    name = epsilon_w182_5ma_dict['mantle']['name'][index]
+    if "IW" in name:
+        bax2.scatter(epsilon, y_val_2, marker='s', s=80, color='green')
+    else:
+        bax2.scatter(epsilon, y_val_2, marker='s', s=80, color='green', facecolors="none")
+    bax2.annotate(name, (epsilon + 100, y_val_2 - 0.4))
+    y_val_2 += 2
+for index, i in enumerate(epsilon_w182_5ma_dict['bulk']['epsilon_182w']):
+    epsilon = epsilon_w182_5ma_dict['bulk']['epsilon_182w'][index]
+    name = epsilon_w182_5ma_dict['bulk']['name'][index]
+    if "IW" in name:
+        bax2.scatter(epsilon, y_val_2, marker='o', s=80, color='red')
+    else:
+        bax2.scatter(epsilon, y_val_2, marker='o', s=80, color='red', facecolors="none")
+    bax2.annotate(name, (epsilon + 100, y_val_2 - 0.4))
+    y_val_2 += 2
+
+bax2.grid(axis='x', which='major', ls='--', alpha=0.4)
+axs = [i.yaxis.set_major_formatter(plt.NullFormatter()) for i in bax2.axs]
+axs = [i.yaxis.set_ticks_position('none')  for i in bax2.axs]
+
+bax2.set_title("$\epsilon$$^{182}$W at Time $t=5$ Ma")
+bax2.set_xlabel("$\epsilon$$^{182}$W")
+bax2.big_ax.xaxis.labelpad = 40
 
 
 
@@ -182,35 +192,44 @@ y_val_1 = 2
 
 # 100 Ma below
 
-y_val_2 = 2
-
-bax2 = brokenaxes(xlims=((-9900, -9800), (-1800, -1400), (-10, 115)), hspace=.0005, despine=False, d=0.01)
-for index, i in enumerate(epsilon_w182_100ma_dict['core']['epsilon_182w']):
-    epsilon = epsilon_w182_100ma_dict['core']['epsilon_182w'][index]
-    name = epsilon_w182_100ma_dict['core']['name'][index]
-    bax2.scatter(epsilon, y_val_2, marker='D', s=80, color='blue')
-    bax2.annotate(name, (epsilon + 10, y_val_2 - 0.4))
-    y_val_2 += 2
-for index, i in enumerate(epsilon_w182_100ma_dict['mantle']['epsilon_182w']):
-    epsilon = epsilon_w182_100ma_dict['mantle']['epsilon_182w'][index]
-    name = epsilon_w182_100ma_dict['mantle']['name'][index]
-    bax2.scatter(epsilon, y_val_2, marker='s', s=80, color='green')
-    bax2.annotate(name, (epsilon + 10, y_val_2 - 0.4))
-    y_val_2 += 2
-for index, i in enumerate(epsilon_w182_100ma_dict['bulk']['epsilon_182w']):
-    epsilon = epsilon_w182_100ma_dict['bulk']['epsilon_182w'][index]
-    name = epsilon_w182_100ma_dict['bulk']['name'][index]
-    bax2.scatter(epsilon, y_val_2, marker='o', s=80, color='red')
-    bax2.annotate(name, (epsilon + 10, y_val_2 - 0.4))
-    y_val_2 += 2
-
-bax2.grid(axis='x', which='major', ls='--', alpha=0.4)
-axs = [i.yaxis.set_major_formatter(plt.NullFormatter()) for i in bax2.axs]
-axs = [i.yaxis.set_ticks_position('none') for i in bax2.axs]
-
-bax2.set_title("$\epsilon$$^{182}$W at Time $t=100$ Ma")
-bax2.set_xlabel("$\epsilon$$^{182}$W")
-bax2.big_ax.xaxis.labelpad = 40
+# y_val_2 = 2
+# 
+# bax2 = brokenaxes(xlims=((-9900, -9800), (-1800, -1400), (-10, 115)), hspace=.0005, despine=False, d=0.01)
+# for index, i in enumerate(epsilon_w182_100ma_dict['core']['epsilon_182w']):
+#     epsilon = epsilon_w182_100ma_dict['core']['epsilon_182w'][index]
+#     name = epsilon_w182_100ma_dict['core']['name'][index]
+#     if "IW" in name:
+#         bax2.scatter(epsilon, y_val_2, marker='D', s=80, color='blue')
+#     else:
+#         bax2.scatter(epsilon, y_val_2, marker='D', s=80, color='blue', facecolors="none")
+#     bax2.annotate(name, (epsilon + 10, y_val_2 - 0.4))
+#     y_val_2 += 2
+# for index, i in enumerate(epsilon_w182_100ma_dict['mantle']['epsilon_182w']):
+#     epsilon = epsilon_w182_100ma_dict['mantle']['epsilon_182w'][index]
+#     name = epsilon_w182_100ma_dict['mantle']['name'][index]
+#     if "IW" in name:
+#         bax2.scatter(epsilon, y_val_2, marker='s', s=80, color='green')
+#     else:
+#         bax2.scatter(epsilon, y_val_2, marker='s', s=80, color='green', facecolors="none")
+#     bax2.annotate(name, (epsilon + 10, y_val_2 - 0.4))
+#     y_val_2 += 2
+# for index, i in enumerate(epsilon_w182_100ma_dict['bulk']['epsilon_182w']):
+#     epsilon = epsilon_w182_100ma_dict['bulk']['epsilon_182w'][index]
+#     name = epsilon_w182_100ma_dict['bulk']['name'][index]
+#     if "IW" in name:
+#         bax2.scatter(epsilon, y_val_2, marker='o', s=80, color='red')
+#     else:
+#         bax2.scatter(epsilon, y_val_2, marker='o', s=80, color='red', facecolors="none")
+#     bax2.annotate(name, (epsilon + 10, y_val_2 - 0.4))
+#     y_val_2 += 2
+# 
+# bax2.grid(axis='x', which='major', ls='--', alpha=0.4)
+# axs = [i.yaxis.set_major_formatter(plt.NullFormatter()) for i in bax2.axs]
+# axs = [i.yaxis.set_ticks_position('none') for i in bax2.axs]
+# 
+# bax2.set_title("$\epsilon$$^{182}$W at Time $t=100$ Ma")
+# bax2.set_xlabel("$\epsilon$$^{182}$W")
+# bax2.big_ax.xaxis.labelpad = 40
 
 
 
