@@ -1267,8 +1267,6 @@ ax34_1.set_title("Metal-Silicate Partitioning at Vesta CMB")
 ax34_1.set_xlabel("$fO_2$ ($\Delta$IW)")
 ax34_1.set_ylabel("log(D)")
 ax34_1.legend(loc='upper right')
-# ax34_1.set_yscale('log')
-
 
 fig35 = plt.figure()
 ax35_1 = fig35.add_subplot(111)
