@@ -1275,7 +1275,7 @@ ax35_1 = fig35.add_subplot(111)
 ax35_1.plot(list(reversed(fO2)), list(reversed(initial_hf182_conc)), linewidth=2.0, color='red', linestyle="-", label="$^{182}$W (Bulk)")
 ax35_1.plot(list(reversed(fO2)), list(reversed(initial_conc_w184)), linewidth=2.0, color='red', linestyle="--", label="$^{184}$W (Bulk)")
 ax35_1.plot(fO2, [i[-1] for i in bulk_core_conc_w182_list], color='blue', linestyle="-", linewidth=2.0, label='$^{182}$W (Core)')
-ax35_1.plot(fO2, [i[-1] for i in bulk_core_conc_w184_list], color='blue', linestyle="--", linewidth=2.0, label='$^{184}$W (Core)')
+ax35_1.plot(fO2, [i[-1] for i in bulk_core_conc_w184_list], color='blue', linestyle="-", linewidth=2.0, label='$^{184}$W (Core)')
 # ax35_1.axhspan(list(reversed(initial_hf182_conc))[0], list(reversed(initial_hf182_conc))[-1], color='red', alpha=0.2, label='Possible $^{182}$Hf Range')
 # ax35_1.axhspan(list(reversed(initial_conc_w184))[0], list(reversed(initial_conc_w184))[-1], color='blue', alpha=0.2, label='Possible $^{184}$W Range')
 ax35_1.axvspan(-2.45, -2.25, color='blue', alpha=0.2, label='Reducing Model')
@@ -1293,7 +1293,7 @@ ax36_1.plot(list(reversed(fO2)), [i / j for i, j in zip(list(reversed(initial_hf
 ax36_1.plot(fO2, [k / l for k, l in zip([i[-1] for i in bulk_core_conc_w182_list], [i[-1] for i in bulk_core_conc_w184_list])],
             color='blue', linestyle="-", linewidth=2.0, label='$^{182}$W/$^{184}$W (Core)')
 ax36_1.plot(fO2, [k / l for k, l in zip([i[-1] for i in bulk_mantle_conc_w182_list], [i[-1] for i in bulk_mantle_conc_w184_list])],
-            color='green', linestyle="-.", linewidth=2.0, label='$^{182}$W/$^{184}$W (Mantle)')
+            color='green', linestyle="-", linewidth=2.0, label='$^{182}$W/$^{184}$W (Mantle)')
 # ax36_1.axhspan(list(reversed(initial_hf182_conc))[0], list(reversed(initial_hf182_conc))[-1], color='red', alpha=0.2, label='Possible $^{182}$Hf Range')
 # ax36_1.axhspan(list(reversed(initial_conc_w184))[0], list(reversed(initial_conc_w184))[-1], color='blue', alpha=0.2, label='Possible $^{184}$W Range')
 ax36_1.axvspan(-2.45, -2.25, color='blue', alpha=0.2, label='Reducing Model')
